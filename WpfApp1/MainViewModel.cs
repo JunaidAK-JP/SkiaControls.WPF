@@ -8,6 +8,11 @@ namespace WpfApp1
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        public MainViewModel()
+        {
+            MyDataCollection.CollectionChanged += MyDataCollection_CollectionChanged;
+        }
+
         private ObservableCollection<MyData> myDataCollection =
         [
             new() { Id = 1, Name = "Alice", Age = 25 },
@@ -29,12 +34,17 @@ namespace WpfApp1
             }
         }
 
-        public IEnumerable<SKListViewColumn> Columns { get; set; } =
+        private void MyDataCollection_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            (Application.Current.MainWindow as MainWindow)?.RefreshSkia();
+        }
+
+        public IEnumerable<SKGridViewColumn> Columns { get; set; } =
         [
-            new SKListViewColumn() { Header = "Id", PropertyName = "Id" },
-            new SKListViewColumn() { Header = "Name", PropertyName = "Name" },
-            new SKListViewColumn() { Header = "Age", PropertyName = "Age" },
-            new SKListViewColumn() { Header = "IsToggle", PropertyName = "IsToggle" }
+            new SKGridViewColumn() { Header = "Id" },
+            new SKGridViewColumn() { Header = "Name" },
+            new SKGridViewColumn() { Header = "Age" },
+            new SKGridViewColumn() { Header = "IsToggle" }
         ];
 
         public Action<object> RowClick => (object data) =>
@@ -78,12 +88,34 @@ namespace WpfApp1
             };
         };
 
-        public Func<object, string, SkiaCellTemplate> CellTemplateSelector { get; set; } = (row, column) =>
+        public Func<object, string, SkCellTemplate> CellTemplateSelector { get; set; } = (row, column) =>
         {
-            if (column == "IsToggle")
-                return new SkiaCellTemplate { IsToggleButton = true, IsToggleButtonOn = (row as MyData)?.IsToggledOn ?? false };
+            SkCellTemplate template = new();
 
-            return new SkiaCellTemplate();
+            if (row is MyData myData)
+            {
+                switch (column)
+                {
+                    case "IsToggle":
+                        template.IsToggleButton = true;
+                        template.IsToggleButtonOn = myData.IsToggledOn;
+                        break;
+
+                    case "Id":
+                        template.CellContent = myData.Id.ToString();
+                        break;
+
+                    case "Name":
+                        template.CellContent = myData.Name;
+                        break;
+
+                    case "Age":
+                        template.CellContent = myData.Age.ToString();
+                        break;
+                }
+            }
+
+            return template;
         };
 
         public event PropertyChangedEventHandler? PropertyChanged;

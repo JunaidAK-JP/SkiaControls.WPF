@@ -1,6 +1,4 @@
-﻿using SkiaSharp;
-using System.Drawing;
-using System.Windows;
+﻿using System.Windows;
 
 namespace WpfApp1
 {
@@ -9,10 +7,12 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainViewModel viewModel = new();
+
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = viewModel;
         }
 
         public void RefreshSkia()
@@ -20,12 +20,14 @@ namespace WpfApp1
             skiaGrid.Refresh();
         }
 
-        public static float GetSystemDpi()
+        private void AddDummyRow(object sender, RoutedEventArgs e)
         {
-            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            viewModel.MyDataCollection.Add(new MyData
             {
-                return g.DpiX / 96.0f; // 96 DPI is the default (100% scaling)
-            }
+                Age = 36,
+                Id = 7,
+                Name = "KKK"
+            });
         }
     }    
 }

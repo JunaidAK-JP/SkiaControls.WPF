@@ -8,13 +8,22 @@
         mc:Ignorable="d" Background="Transparent"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <skia:SKListView 
-            x:Name="skiaGrid" 
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Button Height="30" Content="Add Dummy Row" Click="AddDummyRow" />
+
+        <skia:SkGridView 
+            x:Name="skiaGrid" Grid.Row="1"
             ItemsSource="{Binding MyDataCollection, UpdateSourceTrigger=PropertyChanged}" 
             Columns="{Binding Columns, UpdateSourceTrigger=PropertyChanged}" 
             RowBackgroundSelector="{Binding RowBackgroundSelector}" 
             CellTemplateSelector="{Binding CellTemplateSelector}"
             OnRowClicked="{Binding RowClick}" 
-            OnCellClicked="{Binding CellClick}" />
+            OnCellClicked="{Binding CellClick}"
+            />
     </Grid>
 </Window>

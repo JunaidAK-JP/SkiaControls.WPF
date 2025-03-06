@@ -1,36 +1,59 @@
 ﻿using SkiaSharp;
 using SkiaSharpControls.Models;
+using SkiaSharpControls.Renderer;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace SkiaSharpControls
 {
     /// <summary>
     /// Interaction logic for SKListView.xaml
     /// </summary>
-    public partial class SKListView : UserControl
+    public partial class SkGridView : UserControl
     {
-        public SKListView()
+        public SkGridView()
         {
             InitializeComponent();
+            Unloaded += SkGridView_Unloaded;
+        }
+
+        private void SkGridView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            Renderer?.Dispose();
         }
 
         private bool IsBusy { get; set; }
-        private SkiaGridRenderer renderer = new();
+        public ISkGridRenderer Renderer { get; set; } = new SkGridRenderer();
+
+        public SkRendererProperties DefaultRendererProperties
+        {
+            get { return (SkRendererProperties)GetValue(DefaultRendererPropertiesProperty); }
+            set { SetValue(DefaultRendererPropertiesProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for DefaultRendererProperties.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty DefaultRendererPropertiesProperty =
+            DependencyProperty.Register(nameof(DefaultRendererProperties), typeof(SkRendererProperties), typeof(SkGridView), new PropertyMetadata(new SkRendererProperties(), OnRendererPropertiesChanged));
+
+        private static void OnRendererPropertiesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView gridView)
+            {
+                gridView.Renderer.RendererProperties = gridView.DefaultRendererProperties;
+            }
+        }
 
         public Action<object> OnRowClicked
         {
             get { return (Action<object>)GetValue(OnRowClickedProperty); }
             set { SetValue(OnRowClickedProperty, value); }
         }
-
-        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        
         public static readonly DependencyProperty OnRowClickedProperty =
-            DependencyProperty.Register(nameof(OnRowClicked), typeof(Action<object>), typeof(SKListView), new PropertyMetadata(default));
+            DependencyProperty.Register(nameof(OnRowClicked), typeof(Action<object>), typeof(SkGridView), new PropertyMetadata(default));
 
 
         public Action<object, string> OnCellClicked
@@ -41,22 +64,22 @@ namespace SkiaSharpControls
 
         // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty OnCellClickedProperty =
-            DependencyProperty.Register(nameof(OnCellClicked), typeof(Action<object, string>), typeof(SKListView), new PropertyMetadata(default));
+            DependencyProperty.Register(nameof(OnCellClicked), typeof(Action<object, string>), typeof(SkGridView), new PropertyMetadata(default));
 
 
-        public IEnumerable<SKListViewColumn> Columns
+        public IEnumerable<SKGridViewColumn> Columns
         {
-            get { return (IEnumerable<SKListViewColumn>)GetValue(ColumnsProperty); }
+            get { return (IEnumerable<SKGridViewColumn>)GetValue(ColumnsProperty); }
             set { SetValue(ColumnsProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Columns.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ColumnsProperty =
-            DependencyProperty.Register(nameof(Columns), typeof(IEnumerable<SKListViewColumn>), typeof(SKListView), new PropertyMetadata(default, OnColumnsChanged));
+            DependencyProperty.Register(nameof(Columns), typeof(IEnumerable<SKGridViewColumn>), typeof(SkGridView), new PropertyMetadata(default, OnColumnsChanged));
 
         private static void OnColumnsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SKListView skListView && e.NewValue is IEnumerable<SKListViewColumn> columns)
+            if (d is SkGridView skListView && e.NewValue is IEnumerable<SKGridViewColumn> columns)
             {
                 skListView.IsBusy = true;
                 skListView.GV.Columns.CollectionChanged -= skListView.OnColumnsReordered;
@@ -77,16 +100,15 @@ namespace SkiaSharpControls
         {
             if (sender is ICollection<GridViewColumn> items)
             {
-                IEnumerable<SKListViewColumn> columns = [];
+                IEnumerable<SKGridViewColumn> columns = [];
 
                 foreach (var item in items)
                 {
                     var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
 
-                    columns = columns.Append(new SKListViewColumn()
+                    columns = columns.Append(new SKGridViewColumn()
                     {
-                        Header = existingItem?.Header,
-                        PropertyName = existingItem?.PropertyName,
+                        Header = existingItem?.Header ?? "",
                         Width = existingItem?.Width ?? 100,
                     });
                 }
@@ -103,11 +125,11 @@ namespace SkiaSharpControls
 
         // Using a DependencyProperty as the backing store for ItemsSource.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ItemsSourceProperty =
-            DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(SKListView), new PropertyMetadata(default, OnItemsSourceChanged));
+            DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(SkGridView), new PropertyMetadata(default, OnItemsSourceChanged));
 
         private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SKListView skListView && e.NewValue is IEnumerable)
+            if (d is SkGridView skListView && e.NewValue is IEnumerable)
             {
                 skListView.SkiaCanvas.InvalidateVisual();
             }
@@ -121,11 +143,11 @@ namespace SkiaSharpControls
 
         // Using a DependencyProperty as the backing store for SelectedItems.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SelectedItemsProperty =
-            DependencyProperty.Register(nameof(SelectedItems), typeof(IEnumerable), typeof(SKListView), new PropertyMetadata(default, OnSelectedItemsChanged));
+            DependencyProperty.Register(nameof(SelectedItems), typeof(IEnumerable), typeof(SkGridView), new PropertyMetadata(default, OnSelectedItemsChanged));
 
         private static void OnSelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SKListView skListView && e.NewValue is IEnumerable)
+            if (d is SkGridView skListView && e.NewValue is IEnumerable)
             {
                 skListView.SkiaCanvas.InvalidateVisual();
             }
@@ -138,16 +160,16 @@ namespace SkiaSharpControls
         }
 
         public static readonly DependencyProperty RowBackgroundSelectorProperty =
-            DependencyProperty.Register(nameof(RowBackgroundSelector), typeof(Func<object, SKColor>), typeof(SKListView), new PropertyMetadata(default));
+            DependencyProperty.Register(nameof(RowBackgroundSelector), typeof(Func<object, SKColor>), typeof(SkGridView), new PropertyMetadata(default));
 
-        public Func<object, string, SkiaCellTemplate> CellTemplateSelector
+        public Func<object, string, SkCellTemplate> CellTemplateSelector
         {
-            get => (Func<object, string, SkiaCellTemplate>)GetValue(CellTemplateSelectorProperty);
+            get => (Func<object, string, SkCellTemplate>)GetValue(CellTemplateSelectorProperty);
             set => SetValue(CellTemplateSelectorProperty, value);
         }
 
         public static readonly DependencyProperty CellTemplateSelectorProperty =
-            DependencyProperty.Register(nameof(CellTemplateSelector), typeof(Func<object, string, SkiaCellTemplate>), typeof(SKListView), new PropertyMetadata(default));
+            DependencyProperty.Register(nameof(CellTemplateSelector), typeof(Func<object, string, SkCellTemplate>), typeof(SkGridView), new PropertyMetadata(default));
 
         private void OnPaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
@@ -159,7 +181,7 @@ namespace SkiaSharpControls
             SKCanvas canvas = e.Surface.Canvas;
             canvas.Clear();
             SetScale(canvas);
-            renderer.Draw(canvas, ItemsSource, SelectedItems, Columns, RowBackgroundSelector, CellTemplateSelector);
+            Renderer.Draw(canvas, ItemsSource, Columns, RowBackgroundSelector, CellTemplateSelector);
         }
 
         private void SetScale(SKCanvas canvas)
@@ -217,16 +239,15 @@ namespace SkiaSharpControls
 
             if (GV.Columns is ICollection<GridViewColumn> items)
             {
-                IEnumerable<SKListViewColumn> columns = [];
+                IEnumerable<SKGridViewColumn> columns = [];
 
                 foreach (var item in items)
                 {
                     var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
 
-                    columns = columns.Append(new SKListViewColumn()
+                    columns = columns.Append(new SKGridViewColumn()
                     {
-                        Header = existingItem?.Header,
-                        PropertyName = existingItem?.PropertyName,
+                        Header = existingItem?.Header ?? "",
                         Width = item.Width,
                     });
                 }
