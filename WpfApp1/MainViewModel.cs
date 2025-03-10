@@ -22,6 +22,31 @@ namespace WpfApp1
             new() { Id = 5, Name = "Alice 4", Age = 29 },
             new() { Id = 6, Name = "Alice 5", Age = 30 },
             new() { Id = 7, Name = "Alice 6", Age = 35 },
+
+            new() { Id = 1, Name = "Alice", Age = 25 },
+            new() { Id = 2, Name = "Alice 1", Age = 26 },
+            new() { Id = 3, Name = "Alice 2", Age = 27 },
+            new() { Id = 4, Name = "Alice 3", Age = 28 },
+            new() { Id = 5, Name = "Alice 4", Age = 29 },
+            new() { Id = 6, Name = "Alice 5", Age = 30 },
+            new() { Id = 7, Name = "Alice 6", Age = 35 },
+
+            new() { Id = 1, Name = "Alice", Age = 25 },
+            new() { Id = 2, Name = "Alice 1", Age = 26 },
+            new() { Id = 3, Name = "Alice 2", Age = 27 },
+            new() { Id = 4, Name = "Alice 3", Age = 28 },
+            new() { Id = 5, Name = "Alice 4", Age = 29 },
+            new() { Id = 6, Name = "Alice 5", Age = 30 },
+            new() { Id = 7, Name = "Alice 6", Age = 35 },
+
+            new() { Id = 1, Name = "Alice", Age = 25 },
+            new() { Id = 2, Name = "Alice 1", Age = 26 },
+            new() { Id = 3, Name = "Alice 2", Age = 27 },
+            new() { Id = 4, Name = "Alice 3", Age = 28 },
+            new() { Id = 5, Name = "Alice 4", Age = 29 },
+            new() { Id = 6, Name = "Alice 5", Age = 30 },
+            new() { Id = 7, Name = "Alice 6", Age = 35 },
+
         ];
 
         public ObservableCollection<MyData> MyDataCollection
@@ -39,12 +64,12 @@ namespace WpfApp1
             (Application.Current.MainWindow as MainWindow)?.RefreshSkia();
         }
 
-        public IEnumerable<SKGridViewColumn> Columns { get; set; } =
+        public IEnumerable<SkGridViewColumn> Columns { get; set; } =
         [
-            new SKGridViewColumn() { Header = "Id" },
-            new SKGridViewColumn() { Header = "Name" },
-            new SKGridViewColumn() { Header = "Age" },
-            new SKGridViewColumn() { Header = "IsToggle" }
+            new SkGridViewColumn() { Header = "Id" },
+            new SkGridViewColumn() { Header = "Name" },
+            new SkGridViewColumn() { Header = "Age" },
+            new SkGridViewColumn() { Header = "IsToggle" }
         ];
 
         public Action<object> RowClick => (object data) =>

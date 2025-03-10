@@ -51,7 +51,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <!--<Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -67,5 +67,64 @@
                 <skia:SKElement x:Name="SkiaCanvas" PaintSurface="OnPaintSurface" MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown" />
             </ScrollViewer>
         </Grid>
+    </Grid>-->
+    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel">
+        <!-- Custom Scroll Bar -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="20"/>
+            <!-- Scroll bar width -->
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="21"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+
+        <ListView 
+            x:Name="DataListView" Grid.Row="0" 
+            ScrollViewer.HorizontalScrollBarVisibility="Hidden" 
+            ScrollViewer.VerticalScrollBarVisibility="Hidden" 
+            Background="Transparent" 
+            BorderThickness="0"
+            HorizontalAlignment="Stretch">
+            <ListView.View>
+                <GridView AllowsColumnReorder="true" x:Name="GV" />
+            </ListView.View>
+        </ListView>
+
+        <skia:SKElement 
+            x:Name="SkiaCanvas" 
+            PaintSurface="OnPaintSurface" 
+            Grid.Row="1"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Left"
+            MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
+            MouseDown="SkiaCanvas_MouseDown"
+            MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown" />
+
+        <ScrollBar 
+            x:Name="VerticalScrollViewer"
+            Grid.RowSpan="2"
+            Orientation="Vertical"
+            Minimum="0"
+            SmallChange="1"
+            LargeChange="1"
+            Grid.Column="1"
+            VirtualizingPanel.IsVirtualizing="True"
+            VirtualizingPanel.VirtualizationMode="Recycling"
+            ValueChanged="VerticalScrollViewer_ValueChanged"/>
+
+        <ScrollBar 
+            x:Name="HorizontalScrollViewer"
+            Grid.Row="2"
+            Orientation="Horizontal"
+            Minimum="0"
+            SmallChange="1"
+            LargeChange="1"
+            Grid.ColumnSpan="2"
+            VirtualizingPanel.IsVirtualizing="True"
+            VirtualizingPanel.VirtualizationMode="Recycling"
+            ValueChanged="HorizontalScrollViewer_ValueChanged"/>
     </Grid>
 </UserControl>

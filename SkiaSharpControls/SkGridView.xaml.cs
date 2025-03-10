@@ -1,57 +1,56 @@
 ﻿using SkiaSharp;
 using SkiaSharpControls.Models;
-using SkiaSharpControls.Renderer;
 using System.Collections;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace SkiaSharpControls
 {
     /// <summary>
-    /// Interaction logic for SKListView.xaml
+    /// Interaction logic for SkGridView.xaml
     /// </summary>
     public partial class SkGridView : UserControl
     {
         public SkGridView()
         {
             InitializeComponent();
-            Unloaded += SkGridView_Unloaded;
-        }
 
-        private void SkGridView_Unloaded(object sender, RoutedEventArgs e)
-        {
-            Renderer?.Dispose();
+            DataListView.ItemsSource = new List<string>() { "" };
+            renderer.SetScrollBars(HorizontalScrollViewer, VerticalScrollViewer);
+
+            SizeChanged += (s, o) =>
+            {
+                UpdateValues();
+            };
+
+            Loaded += (s, o) =>
+            {
+
+                SkiaCanvas.Height = GetSkiaHeight(TotalRows);
+                SkiaCanvas.Width = GetSkiaWidth();
+                DataListViewScroll = FindScrollViewer(DataListView);
+                AddColumnWidthChangedHandler(DataListView);
+
+                UpdateValues();
+            };
         }
 
         private bool IsBusy { get; set; }
-        public ISkGridRenderer Renderer { get; set; } = new SkGridRenderer();
-
-        public SkRendererProperties DefaultRendererProperties
-        {
-            get { return (SkRendererProperties)GetValue(DefaultRendererPropertiesProperty); }
-            set { SetValue(DefaultRendererPropertiesProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for DefaultRendererProperties.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DefaultRendererPropertiesProperty =
-            DependencyProperty.Register(nameof(DefaultRendererProperties), typeof(SkRendererProperties), typeof(SkGridView), new PropertyMetadata(new SkRendererProperties(), OnRendererPropertiesChanged));
-
-        private static void OnRendererPropertiesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is SkGridView gridView)
-            {
-                gridView.Renderer.RendererProperties = gridView.DefaultRendererProperties;
-            }
-        }
+        private SkGridRenderer renderer = new();
 
         public Action<object> OnRowClicked
         {
             get { return (Action<object>)GetValue(OnRowClickedProperty); }
             set { SetValue(OnRowClickedProperty, value); }
         }
-        
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty OnRowClickedProperty =
             DependencyProperty.Register(nameof(OnRowClicked), typeof(Action<object>), typeof(SkGridView), new PropertyMetadata(default));
 
@@ -67,32 +66,33 @@ namespace SkiaSharpControls
             DependencyProperty.Register(nameof(OnCellClicked), typeof(Action<object, string>), typeof(SkGridView), new PropertyMetadata(default));
 
 
-        public IEnumerable<SKGridViewColumn> Columns
+        public IEnumerable<SkGridViewColumn> Columns
         {
-            get { return (IEnumerable<SKGridViewColumn>)GetValue(ColumnsProperty); }
+            get { return (IEnumerable<SkGridViewColumn>)GetValue(ColumnsProperty); }
             set { SetValue(ColumnsProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Columns.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ColumnsProperty =
-            DependencyProperty.Register(nameof(Columns), typeof(IEnumerable<SKGridViewColumn>), typeof(SkGridView), new PropertyMetadata(default, OnColumnsChanged));
+            DependencyProperty.Register(nameof(Columns), typeof(IEnumerable<SkGridViewColumn>), typeof(SkGridView), new PropertyMetadata(default, OnColumnsChanged));
 
         private static void OnColumnsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SkGridView skListView && e.NewValue is IEnumerable<SKGridViewColumn> columns)
+            if (d is SkGridView skGridView && e.NewValue is IEnumerable<SkGridViewColumn> columns)
             {
-                skListView.IsBusy = true;
-                skListView.GV.Columns.CollectionChanged -= skListView.OnColumnsReordered;
-                skListView.GV.Columns.Clear();
+                skGridView.IsBusy = true;
+                skGridView.GV.Columns.CollectionChanged -= skGridView.OnColumnsReordered;
+                skGridView.GV.Columns.Clear();
 
                 foreach (var column in columns)
                 {
-                    skListView.GV.Columns.Add(new GridViewColumn() { Header = column.Header, Width = column.Width });
+                    skGridView.GV.Columns.Add(new GridViewColumn() { Header = column.Header, Width = column.Width });
                 }
 
-                skListView.IsBusy = false;
-                skListView.SkiaCanvas.InvalidateVisual();
-                skListView.GV.Columns.CollectionChanged += skListView.OnColumnsReordered;
+                skGridView.renderer.SetColumns(columns);
+                skGridView.IsBusy = false;
+                skGridView.SkiaCanvas.InvalidateVisual();
+                skGridView.GV.Columns.CollectionChanged += skGridView.OnColumnsReordered;
             }
         }
 
@@ -100,13 +100,13 @@ namespace SkiaSharpControls
         {
             if (sender is ICollection<GridViewColumn> items)
             {
-                IEnumerable<SKGridViewColumn> columns = [];
+                IEnumerable<SkGridViewColumn> columns = [];
 
                 foreach (var item in items)
                 {
                     var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
 
-                    columns = columns.Append(new SKGridViewColumn()
+                    columns = columns.Append(new SkGridViewColumn()
                     {
                         Header = existingItem?.Header ?? "",
                         Width = existingItem?.Width ?? 100,
@@ -114,6 +114,7 @@ namespace SkiaSharpControls
                 }
 
                 Columns = columns;
+                renderer.SetColumns(columns);
             }
         }
 
@@ -129,10 +130,46 @@ namespace SkiaSharpControls
 
         private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SkGridView skListView && e.NewValue is IEnumerable)
+            if (d is SkGridView skGridView && e.NewValue is IEnumerable list)
             {
-                skListView.SkiaCanvas.InvalidateVisual();
+                if (list != null)
+                {
+                    var listCount = list.Cast<object>().Count();
+                    skGridView.SkiaCanvas.InvalidateVisual();
+
+                    if (listCount > 0)
+                    {
+                        skGridView.TotalRows = listCount;
+                        skGridView.VerticalScrollViewer.Maximum = skGridView.SkiaCanvas.ActualHeight - skGridView.MainGrid.ActualHeight;
+                    }
+                    else
+                    {
+                        skGridView.TotalRows = 0;
+                        skGridView.VerticalScrollViewer.Maximum = 0;
+                    }
+                }
+                skGridView?.UpdateValues();
             }
+        }
+
+        private double GetSkiaHeight(int totalRows)
+        {
+            if (MainGrid.ActualHeight < (totalRows * RowHeight))
+            {
+                return MainGrid.ActualHeight;
+            }
+            return (totalRows * RowHeight);
+        }
+
+
+        private double GetSkiaWidth()
+        {
+            var totalcolumnwidth = GV.Columns.Where(x => x.Width > 0).Sum(x => x.Width);
+            if (MainGrid.ActualWidth > totalcolumnwidth)
+            {
+                return totalcolumnwidth;
+            }
+            return MainGrid.ActualWidth;
         }
 
         public IEnumerable SelectedItems
@@ -147,9 +184,9 @@ namespace SkiaSharpControls
 
         private static void OnSelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SkGridView skListView && e.NewValue is IEnumerable)
+            if (d is SkGridView skGridView && e.NewValue is IEnumerable)
             {
-                skListView.SkiaCanvas.InvalidateVisual();
+                skGridView.SkiaCanvas.InvalidateVisual();
             }
         }
 
@@ -160,7 +197,15 @@ namespace SkiaSharpControls
         }
 
         public static readonly DependencyProperty RowBackgroundSelectorProperty =
-            DependencyProperty.Register(nameof(RowBackgroundSelector), typeof(Func<object, SKColor>), typeof(SkGridView), new PropertyMetadata(default));
+            DependencyProperty.Register(nameof(RowBackgroundSelector), typeof(Func<object, SKColor>), typeof(SkGridView), new PropertyMetadata(default, OnRowBackgroundTemplateChanged));
+
+        private static void OnRowBackgroundTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView && e.NewValue is Func<object, SKColor> template)
+            {
+                skGridView.renderer.SetRowBackgroundSelector(template);
+            }
+        }
 
         public Func<object, string, SkCellTemplate> CellTemplateSelector
         {
@@ -169,7 +214,15 @@ namespace SkiaSharpControls
         }
 
         public static readonly DependencyProperty CellTemplateSelectorProperty =
-            DependencyProperty.Register(nameof(CellTemplateSelector), typeof(Func<object, string, SkCellTemplate>), typeof(SkGridView), new PropertyMetadata(default));
+            DependencyProperty.Register(nameof(CellTemplateSelector), typeof(Func<object, string, SkCellTemplate>), typeof(SkGridView), new PropertyMetadata(default, OnCellTemplateChanged));
+
+        private static void OnCellTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView && e.NewValue is Func<object, string, SkCellTemplate> template)
+            {
+                skGridView.renderer.SetCellTemplateSelector(template);
+            }
+        }
 
         private void OnPaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
@@ -181,7 +234,18 @@ namespace SkiaSharpControls
             SKCanvas canvas = e.Surface.Canvas;
             canvas.Clear();
             SetScale(canvas);
-            Renderer.Draw(canvas, ItemsSource, Columns, RowBackgroundSelector, CellTemplateSelector);
+            canvas.Save();
+            canvas.Translate(-ScrollOffsetX, -ScrollOffsetY);
+            Draw(canvas);
+            canvas.Restore();
+        }
+
+        private void Draw(SKCanvas canvas)
+        {
+            renderer.UpdateItems(ItemsSource);
+            renderer.UpdateSelectedItems(SelectedItems);
+
+            renderer.Draw(canvas, ScrollOffsetX, ScrollOffsetY, RowHeight, TotalRows);
         }
 
         private void SetScale(SKCanvas canvas)
@@ -209,13 +273,15 @@ namespace SkiaSharpControls
             // Get mouse position relative to SKElement
             var point = e.GetPosition(SkiaCanvas);
 
-            int rowIndex = (int)(point.Y / 25);
+            int rowIndex = (int)(point.Y / RowHeight);
             double x = point.X;
 
             var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
 
             if (s.Count > rowIndex)
+            {
                 OnRowClicked?.Invoke(s[rowIndex]);
+            }
 
             foreach (var item in GV.Columns)
             {
@@ -239,13 +305,13 @@ namespace SkiaSharpControls
 
             if (GV.Columns is ICollection<GridViewColumn> items)
             {
-                IEnumerable<SKGridViewColumn> columns = [];
+                IEnumerable<SkGridViewColumn> columns = [];
 
                 foreach (var item in items)
                 {
                     var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
 
-                    columns = columns.Append(new SKGridViewColumn()
+                    columns = columns.Append(new SkGridViewColumn()
                     {
                         Header = existingItem?.Header ?? "",
                         Width = item.Width,
@@ -254,11 +320,167 @@ namespace SkiaSharpControls
 
                 Columns = columns;
             }
+            UpdateValues();
         }
 
         public void Refresh()
         {
+            TotalRows = ItemsSource.Cast<object>().Count();
+            UpdateValues();
             SkiaCanvas.InvalidateVisual();
+        }
+
+        public List<string> FakeList { get; set; } = new() { "" };
+        private float ScrollOffsetX = 0, ScrollOffsetY = 0;
+        private int TotalRows = 0;
+        private int TotalCols = 61;
+        private float ColWidth = 90;
+        private int RowHeight = 18;
+        private ScrollViewer DataListViewScroll;
+        private float DpiScalling = 0;
+        private SKFont TextFont;
+        private void SkiaCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (ItemsSource == null)
+                return;
+
+            if (e.ButtonState == MouseButtonState.Pressed && e.ChangedButton == MouseButton.Right)
+            {
+
+            }
+        }
+
+        private void SkiaCanvas_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var clickPosition = e.GetPosition(SkiaCanvas);
+            int clickedRowIndex = (int)((clickPosition.Y + ScrollOffsetY) / RowHeight);
+            int clickedColumnIndex = (int)((clickPosition.X + ScrollOffsetX));
+            //if (DescriptionRowIndexList != null && DescriptionRowIndexList.Contains(clickedRowIndex) && clickedColumnIndex >= (DescriptionColumnPostion + 5) && clickedColumnIndex <= (DescriptionColumnPostion + 20))
+            //{
+
+            //    var visiblerows = ItemsSource.Where(x => x.IsVisible == true).ToList();
+            //    foreach (var item in ItemsSource.Where(x => x.GroupName == visiblerows[clickedRowIndex].Description))
+            //    {
+            //        item.IsVisible = !visiblerows[clickedRowIndex].IsExpanded;
+            //    }
+            //    foreach (var item in ItemsSource.Where(x => x.GroupName == visiblerows[clickedRowIndex].Description && x.IsExtra == true))
+            //    {
+            //        item.IsVisible = false;
+            //    }
+            //    visiblerows[clickedRowIndex].IsExpanded = !visiblerows[clickedRowIndex].IsExpanded;
+
+            //    int iteration = 0;
+            //    visiblerows = ItemsSource.Where(x => x.IsVisible == true).ToList();
+            //    foreach (var item in visiblerows)
+            //    {
+            //        if (item.IsGroup)
+            //        {
+            //            DescriptionRowIndexList[iteration++] = visiblerows.IndexOf(item);
+
+            //        }
+            //    }
+
+            //    SkiaHeight = visiblerows.Count() * RowHeight;
+            //    TotalRows = visiblerows.Count();
+            //    VerticalScrollViewer.Maximum = SkiaHeight - MainGrid.ActualHeight;
+
+            //}
+            //if (clickedRowIndex >= 0 && clickedRowIndex < TotalRows)
+            //{
+            //    selectedRowIndex = clickedRowIndex;
+            //    SkiaCanvas.InvalidateVisual();
+            //}
+        }
+
+        private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            ScrollOffsetY = (float)e.NewValue;
+            SkiaCanvas.InvalidateVisual();
+        }
+        private void HorizontalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            ScrollOffsetX = (float)(e.NewValue);
+            DataListViewScroll.ScrollToHorizontalOffset(ScrollOffsetX);
+            SkiaCanvas.InvalidateVisual();
+        }
+        private void AddColumnWidthChangedHandler(System.Windows.Controls.ListView listView)
+        {
+            if (listView.View is GridView gridView)
+            {
+                foreach (var column in gridView.Columns)
+                {
+                    DependencyPropertyDescriptor.FromProperty(GridViewColumn.WidthProperty, typeof(GridViewColumn))
+                        .AddValueChanged(column, OnColumnWidthChanged);
+                }
+            }
+        }
+
+        private void OnColumnWidthChanged(object sender, EventArgs e)
+        {
+            UpdateValues();
+            SkiaCanvas.InvalidateVisual();
+        }
+
+        private static ScrollViewer FindScrollViewer(DependencyObject parent)
+        {
+            if (parent is ScrollViewer)
+                return (ScrollViewer)parent;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                var result = FindScrollViewer(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        private void UpdateValues()
+        {
+            SkiaCanvas.Height = GetSkiaHeight(TotalRows);
+            SkiaCanvas.Width = GetSkiaWidth();
+            var TotalColsVisible = GV.Columns.Where(x => x.Width > 0).Select(x => x.Width);
+            ColWidth = (float)(TotalColsVisible.Sum() / (TotalColsVisible.Count() - 1));
+
+            TotalCols = 0;
+
+            HorizontalScrollViewer.Minimum = 0;
+            HorizontalScrollViewer.ViewportSize = MainGrid.ActualWidth;
+            HorizontalScrollViewer.Maximum = TotalColsVisible.Sum() - MainGrid.ActualWidth;
+
+            VerticalScrollViewer.Minimum = 0;
+            VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
+            VerticalScrollViewer.Maximum = ((TotalRows + 5) * RowHeight) - MainGrid.ActualHeight;
+
+            PresentationSource source = PresentationSource.FromVisual(this);
+            if (source != null)
+            {
+                var res = source.CompositionTarget.TransformToDevice.M11;
+                DpiScalling = (float)res;
+            }
+            else
+            {
+                DpiScalling = GetSystemDpi();
+            }
+        }
+        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void MainGrid_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            {
+
+                HorizontalScrollViewer.Value -= e.Delta / 1;
+            }
+            else
+            {
+                VerticalScrollViewer.Value -= e.Delta / 1;
+            }
         }
     }
 }
