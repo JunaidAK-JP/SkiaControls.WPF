@@ -355,41 +355,6 @@ namespace SkiaSharpControls
             var clickPosition = e.GetPosition(SkiaCanvas);
             int clickedRowIndex = (int)((clickPosition.Y + ScrollOffsetY) / RowHeight);
             int clickedColumnIndex = (int)((clickPosition.X + ScrollOffsetX));
-            //if (DescriptionRowIndexList != null && DescriptionRowIndexList.Contains(clickedRowIndex) && clickedColumnIndex >= (DescriptionColumnPostion + 5) && clickedColumnIndex <= (DescriptionColumnPostion + 20))
-            //{
-
-            //    var visiblerows = ItemsSource.Where(x => x.IsVisible == true).ToList();
-            //    foreach (var item in ItemsSource.Where(x => x.GroupName == visiblerows[clickedRowIndex].Description))
-            //    {
-            //        item.IsVisible = !visiblerows[clickedRowIndex].IsExpanded;
-            //    }
-            //    foreach (var item in ItemsSource.Where(x => x.GroupName == visiblerows[clickedRowIndex].Description && x.IsExtra == true))
-            //    {
-            //        item.IsVisible = false;
-            //    }
-            //    visiblerows[clickedRowIndex].IsExpanded = !visiblerows[clickedRowIndex].IsExpanded;
-
-            //    int iteration = 0;
-            //    visiblerows = ItemsSource.Where(x => x.IsVisible == true).ToList();
-            //    foreach (var item in visiblerows)
-            //    {
-            //        if (item.IsGroup)
-            //        {
-            //            DescriptionRowIndexList[iteration++] = visiblerows.IndexOf(item);
-
-            //        }
-            //    }
-
-            //    SkiaHeight = visiblerows.Count() * RowHeight;
-            //    TotalRows = visiblerows.Count();
-            //    VerticalScrollViewer.Maximum = SkiaHeight - MainGrid.ActualHeight;
-
-            //}
-            //if (clickedRowIndex >= 0 && clickedRowIndex < TotalRows)
-            //{
-            //    selectedRowIndex = clickedRowIndex;
-            //    SkiaCanvas.InvalidateVisual();
-            //}
         }
 
         private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

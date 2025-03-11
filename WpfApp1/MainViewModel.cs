@@ -109,7 +109,7 @@ namespace WpfApp1
                 29 => SKColors.Yellow,
                 30 => SKColors.Green,
                 35 => SKColors.Red,
-                _ => SKColors.White,
+                _ => SKColors.Black,
             };
         };
 
@@ -119,6 +119,13 @@ namespace WpfApp1
 
             if (row is MyData myData)
             {
+                template.RendererProperties = new SkRendererProperties()
+                {
+                    TextFont = new SKFont() { Size = 11, Typeface = SKTypeface.FromFamilyName("Arial") },
+                    TextForeground = new SKPaint { Color = SKColors.White, IsAntialias = true },
+                    LineBackground = new SKPaint { Color = SKColors.Red, StrokeWidth = 1 }
+                };
+
                 switch (column)
                 {
                     case "IsToggle":

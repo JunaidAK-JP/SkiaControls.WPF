@@ -2,7 +2,6 @@
 using SkiaSharpControls.Models;
 using SkiaSharpControls.Renderer;
 using System.Collections;
-using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
 namespace SkiaSharpControls
@@ -84,8 +83,6 @@ namespace SkiaSharpControls
 
             float currentY = firstVisibleRow * rowHeight;
 
-            //var visibleColumns = Columns.Where(x => x.Width > 0).ToList();
-
             for (int row = firstVisibleRow; row < firstVisibleRow + visibleRowCount; row++)
             {
                 var item = Items?.Cast<object>().ElementAt(row) ?? new List<object>();
@@ -97,21 +94,24 @@ namespace SkiaSharpControls
 
                     var template = CellTemplateSelector?.Invoke(item, visibleColumns.ElementAt(colIndex).Header);
                     string value = template?.CellContent ?? "";
+                    var fontPaint = template?.RendererProperties?.TextForeground ?? new SKPaint { Color = SKColors.Black, StrokeWidth = 1 };
+                    var textFont = template?.RendererProperties?.TextFont ?? SymbolFont;
+                    var lineColor = template?.RendererProperties?.LineBackground ?? new SKPaint { Color = SKColor.Parse("#ffffff"), StrokeWidth = 1 };
+
+                    fontPaint.IsAntialias = true;
+                    lineColor.IsAntialias = true;
 
                     SKColor bgColor = RowBackgroundSelector?.Invoke(item) ?? SKColors.AliceBlue;
-                    using (var Fontpaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 1, IsAntialias = true })
+
                     using (var paint = new SKPaint { Color = bgColor, StrokeWidth = 1, IsAntialias = true })
                     {
-                        Draw(canvas, colIndex, row, value, Fontpaint, paint, GVColumnWidth, currentX1, currentY, false, false, rowHeight, HighlightSelection(SelectedItems, item));
+                        Draw(canvas, colIndex, row, value, fontPaint, textFont, paint, GVColumnWidth, currentX1, currentY, false, false, rowHeight, HighlightSelected(item));
                     }
 
                     if (true)//show gridlines
                     {
-                        using (var paint = new SKPaint { Color = SKColor.Parse("#ffffff"), StrokeWidth = 1, IsAntialias = true })
-                        {
-                            canvas.DrawLine(currentX1 + GVColumnWidth, currentY, currentX1 + GVColumnWidth, currentY + rowHeight, paint);
-                            canvas.DrawLine(currentX1, currentY + rowHeight, currentX1 + GVColumnWidth, currentY + rowHeight, paint);
-                        }
+                        canvas.DrawLine(currentX1 + GVColumnWidth, currentY, currentX1 + GVColumnWidth, currentY + rowHeight, lineColor);
+                        canvas.DrawLine(currentX1, currentY + rowHeight, currentX1 + GVColumnWidth, currentY + rowHeight, lineColor);
                     }
                     currentX1 += GVColumnWidth;
                 }
@@ -119,22 +119,23 @@ namespace SkiaSharpControls
             }
         }
 
-        private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKPaint backColor, float width, float x, float y, bool isTextMiddle, bool isTextRight, float RowHeight, bool isselectedrow)
+        private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, float width, float x, float y, bool isTextMiddle, bool isTextRight, float RowHeight, bool isselectedrow)
         {
             DrawRect(canvas, rowIndex, x, y, backColor, width, RowHeight);
-            DrawText(canvas, columnsIndex, rowIndex, value, fontcolor, width, x, y, isTextMiddle, isTextRight);
+            DrawText(canvas, columnsIndex, rowIndex, value, fontcolor, textFont, width, x, y, isTextMiddle, isTextRight);
         }
-        private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, float width, float x, float y, bool isTextMiddle, bool isTextRight)
+
+        private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, float width, float x, float y, bool isTextMiddle, bool isTextRight)
         {
             if (width < 10) return;
 
-            float textWidth = SymbolFont.MeasureText(value);
+            float textWidth = textFont.MeasureText(value);
             int maxIterations = value.Length; // Prevent infinite loop
 
             while (textWidth > (width - 10) && maxIterations > 0)
             {
                 value = value.Length > 1 ? value[..^1] : "";
-                textWidth = SymbolFont.MeasureText(value);
+                textWidth = textFont.MeasureText(value);
                 maxIterations--; // Reduce iteration count
             }
 
@@ -144,7 +145,7 @@ namespace SkiaSharpControls
             else if (isTextMiddle)
                 textX = x + (width - textWidth) / 2;
 
-            canvas.DrawText(value, textX, y + 12, SymbolFont, fontcolor);
+            canvas.DrawText(value, textX, y + 12, textFont, fontcolor);
 
         }
 
@@ -162,16 +163,19 @@ namespace SkiaSharpControls
             }
         }
 
-        private bool HighlightSelection(IEnumerable selectedItems, object? item)
+        private bool HighlightSelected(object? item)
         {
-            if (selectedItems == null) return false;
-            foreach (var selectedItem in selectedItems)
+            if (SelectedItems == null) 
+                return false;
+
+            foreach (var selectedItem in SelectedItems)
             {
                 if (item == selectedItem)
                 {
                     return true;
                 }
             }
+
             return false;
         }
 
