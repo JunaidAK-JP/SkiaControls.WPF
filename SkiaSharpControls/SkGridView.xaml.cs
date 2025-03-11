@@ -224,6 +224,24 @@ namespace SkiaSharpControls
             }
         }
 
+        public bool ShowGridLines
+        {
+            get { return (bool)GetValue(ShowGridLinesProperty); }
+            set { SetValue(ShowGridLinesProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for ShowGridLines.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ShowGridLinesProperty =
+            DependencyProperty.Register(nameof(ShowGridLines), typeof(bool), typeof(SkGridView), new PropertyMetadata(true, OnShowGridLinesChanged));
+
+        private static void OnShowGridLinesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView && e.NewValue is bool showGridLines)
+            {
+                skGridView.renderer.SetGridLinesVisibility(showGridLines);
+            }
+        }
+
         private void OnPaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
             if (IsBusy)

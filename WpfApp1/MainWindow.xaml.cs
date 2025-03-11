@@ -29,5 +29,11 @@ namespace WpfApp1
                 Name = "KKK"
             });
         }
+
+        private void ToggleGridLines(object sender, RoutedEventArgs e)
+        {
+            viewModel.ShowGridLines = !viewModel.ShowGridLines;
+            skiaGrid.Refresh();
+        }
     }    
 }

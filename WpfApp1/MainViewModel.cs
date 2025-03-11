@@ -150,6 +150,19 @@ namespace WpfApp1
             return template;
         };
 
+        private bool showGridLines;
+
+        public bool ShowGridLines
+        {
+            get { return showGridLines; }
+            set
+            {
+                showGridLines = value;
+                OnPropertyChanged(nameof(ShowGridLines));
+            }
+        }
+
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)

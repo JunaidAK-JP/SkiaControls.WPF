@@ -16,6 +16,7 @@ namespace SkiaSharpControls
         private Func<object, string, SkCellTemplate>? CellTemplateSelector { get; set; }
         private ScrollBar? HorizontalScrollViewer { get; set; }
         private ScrollBar? VerticalScrollViewer { get; set; }
+        private bool ShowGridLines { get; set; }
 
         public void UpdateItems(IEnumerable items)
         {
@@ -46,6 +47,11 @@ namespace SkiaSharpControls
         public void SetCellTemplateSelector(Func<object, string, SkCellTemplate> cellTemplateSelector)
         {
             CellTemplateSelector = cellTemplateSelector;
+        }
+
+        public void SetGridLinesVisibility(bool showGridLines)
+        {
+            ShowGridLines = showGridLines;
         }
 
         public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, float rowHeight, int totalRows)
@@ -108,11 +114,12 @@ namespace SkiaSharpControls
                         Draw(canvas, colIndex, row, value, fontPaint, textFont, paint, GVColumnWidth, currentX1, currentY, false, false, rowHeight, HighlightSelected(item));
                     }
 
-                    if (true)//show gridlines
+                    if (ShowGridLines)
                     {
                         canvas.DrawLine(currentX1 + GVColumnWidth, currentY, currentX1 + GVColumnWidth, currentY + rowHeight, lineColor);
                         canvas.DrawLine(currentX1, currentY + rowHeight, currentX1 + GVColumnWidth, currentY + rowHeight, lineColor);
                     }
+
                     currentX1 += GVColumnWidth;
                 }
                 currentY += rowHeight;
@@ -151,7 +158,7 @@ namespace SkiaSharpControls
 
         private void DrawRect(SKCanvas canvas, int rowIndex, float x, float y, SKPaint backColor, float width, float RowHeight)
         {
-            if (true)//show gridlines
+            if (ShowGridLines)
             {
                 SKRect rect = new SKRect(x, y, x + width, y + RowHeight);
                 canvas.DrawRect(rect, backColor);
