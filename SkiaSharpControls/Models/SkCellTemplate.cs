@@ -13,6 +13,11 @@ namespace SkiaSharpControls.Models
 
         public string CellContent { get; set; } = "";
 
+        /// <summary>
+        /// Gives canvas on which drawing is being done along with current row's x and y positions
+        /// </summary>
+        public Action<SKCanvas, float, float>? CustomDrawing { get; set; }
+
         public SkRendererProperties? RendererProperties { get; set; }
     }
 }

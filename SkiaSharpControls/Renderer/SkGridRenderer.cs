@@ -112,6 +112,11 @@ namespace SkiaSharpControls
                     using (var paint = new SKPaint { Color = bgColor, StrokeWidth = 1, IsAntialias = true })
                     {
                         Draw(canvas, colIndex, row, value, fontPaint, textFont, paint, GVColumnWidth, currentX1, currentY, false, false, rowHeight, HighlightSelected(item));
+
+                        if (template?.CustomDrawing != null)
+                        {
+                            template.CustomDrawing.Invoke(canvas, currentX1, currentY);
+                        }
                     }
 
                     if (ShowGridLines)

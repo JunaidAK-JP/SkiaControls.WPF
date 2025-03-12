@@ -430,7 +430,7 @@ namespace SkiaSharpControls
 
             HorizontalScrollViewer.Minimum = 0;
             HorizontalScrollViewer.ViewportSize = MainGrid.ActualWidth;
-            HorizontalScrollViewer.Maximum = TotalColsVisible.Sum() - MainGrid.ActualWidth;
+            HorizontalScrollViewer.Maximum = TotalColsVisible.Sum() - MainGrid.ActualWidth + 10;
 
             VerticalScrollViewer.Minimum = 0;
             VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;

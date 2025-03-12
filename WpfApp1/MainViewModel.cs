@@ -68,6 +68,8 @@ namespace WpfApp1
         [
             new SkGridViewColumn() { Header = "Id" },
             new SkGridViewColumn() { Header = "Name" },
+            new SkGridViewColumn() { Header = "Trend" },
+            new SkGridViewColumn() { Header = "Trend2" },
             new SkGridViewColumn() { Header = "Age" },
             new SkGridViewColumn() { Header = "IsToggle" }
         ];
@@ -143,6 +145,47 @@ namespace WpfApp1
 
                     case "Age":
                         template.CellContent = myData.Age.ToString();
+                        break;
+
+                    case "Trend":
+                        template.CustomDrawing = new Action<SKCanvas, float, float>((canvas, x, y) =>
+                        {
+                            x += 5;
+                            y += 2;
+
+                            for (int i = 0; i < 10; i++)
+                            {
+                                var rect = SKRect.Create(x, y, 10, 12);
+                                canvas.DrawRect(rect, new SKPaint() { Color = SKColor.Parse(i % 2 == 0 ? "#FF0000" : "#00FF00"), StrokeWidth = 1, IsAntialias = true });
+                                x += 10;
+                            }
+                        });
+                        break;
+
+                    case "Trend2":
+                        template.CustomDrawing = new Action<SKCanvas, float, float>((canvas, x, y) =>
+                        {
+                            float initialX = x;
+                            x += 5;
+                            y += 2;
+
+                            for (int i = 0; i < 10; i++)
+                            {
+                                var rect = SKRect.Create(x, y, 10, 6);
+                                canvas.DrawRect(rect, new SKPaint() { Color = SKColor.Parse(i % 2 == 0 ? "#FF0000" : "#00FF00"), StrokeWidth = 1, IsAntialias = true });
+                                x += 10;
+                            }
+
+                            x = initialX + 5;
+                            y += 6;
+
+                            for (int i = 0; i < 10; i++)
+                            {
+                                var rect = SKRect.Create(x, y, 10, 6);
+                                canvas.DrawRect(rect, new SKPaint() { Color = SKColor.Parse(i % 2 != 0 ? "#FF0000" : "#00FF00"), StrokeWidth = 1, IsAntialias = true });
+                                x += 10;
+                            }
+                        });
                         break;
                 }
             }
