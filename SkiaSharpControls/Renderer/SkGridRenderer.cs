@@ -92,7 +92,7 @@ namespace SkiaSharpControls
             for (int row = firstVisibleRow; row < firstVisibleRow + visibleRowCount; row++)
             {
                 var item = Items?.Cast<object>().ElementAt(row) ?? new List<object>();
-                float currentX1 = firstVisibleCol == 0 ? 0 : Columns?.Take(firstVisibleCol).Sum(x => (float)x.Width) ?? 0; // Get X position based on columns
+                float currentX = firstVisibleCol == 0 ? 0 : Columns?.Take(firstVisibleCol).Sum(x => (float)x.Width) ?? 0; // Get X position based on columns
 
                 for (int colIndex = firstVisibleCol; colIndex < visibleColCount; colIndex++)
                 {
@@ -107,34 +107,48 @@ namespace SkiaSharpControls
                     fontPaint.IsAntialias = true;
                     lineColor.IsAntialias = true;
 
-                    SKColor bgColor = RowBackgroundSelector?.Invoke(item) ?? SKColors.AliceBlue;
+                    SKColor bgColor = template?.RendererProperties?.BackgroundBrush?.Color ?? RowBackgroundSelector?.Invoke(item) ?? SKColors.AliceBlue;
 
                     using (var paint = new SKPaint { Color = bgColor, StrokeWidth = 1, IsAntialias = true })
                     {
-                        Draw(canvas, colIndex, row, value, fontPaint, textFont, paint, GVColumnWidth, currentX1, currentY, false, false, rowHeight, HighlightSelected(item));
+                        Draw(canvas, colIndex, row, value, fontPaint, textFont, paint, template?.RendererProperties?.BorderBrush, GVColumnWidth, currentX, currentY, false, false, rowHeight, HighlightSelected(item));
 
                         if (template?.CustomDrawing != null)
                         {
-                            template.CustomDrawing.Invoke(canvas, currentX1, currentY);
+                            template.CustomDrawing.Invoke(canvas, currentX, currentY);
                         }
                     }
 
                     if (ShowGridLines)
                     {
-                        canvas.DrawLine(currentX1 + GVColumnWidth, currentY, currentX1 + GVColumnWidth, currentY + rowHeight, lineColor);
-                        canvas.DrawLine(currentX1, currentY + rowHeight, currentX1 + GVColumnWidth, currentY + rowHeight, lineColor);
+                        canvas.DrawLine(currentX + GVColumnWidth, currentY, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
+                        canvas.DrawLine(currentX, currentY + rowHeight, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
                     }
 
-                    currentX1 += GVColumnWidth;
+                    currentX += GVColumnWidth;
                 }
                 currentY += rowHeight;
             }
         }
 
-        private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, float width, float x, float y, bool isTextMiddle, bool isTextRight, float RowHeight, bool isselectedrow)
+        private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, SKPaint? borderColor, float width, float x, float y, bool isTextMiddle, bool isTextRight, float rowHeight, bool isselectedrow)
         {
-            DrawRect(canvas, rowIndex, x, y, backColor, width, RowHeight);
+            DrawRect(canvas, rowIndex, x, y, backColor, width, rowHeight);
+
+            if (borderColor != null)
+            {
+                DrawBorder(canvas, borderColor, width, x, y, rowHeight);
+            }
+
             DrawText(canvas, columnsIndex, rowIndex, value, fontcolor, textFont, width, x, y, isTextMiddle, isTextRight);
+        }
+
+        private static void DrawBorder(SKCanvas canvas, SKPaint? borderColor, float width, float x, float y, float rowHeight)
+        {
+            canvas.DrawLine(x + 1, y, x + 1, y + rowHeight, borderColor);
+            canvas.DrawLine(x + width - 2, y, x + width - 2, y + rowHeight, borderColor);
+            canvas.DrawLine(x, y + rowHeight - 1, x + width, y + rowHeight - 1, borderColor);
+            canvas.DrawLine(x, y, x + width, y, borderColor);
         }
 
         private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, float width, float x, float y, bool isTextMiddle, bool isTextRight)

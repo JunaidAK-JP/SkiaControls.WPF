@@ -71,7 +71,8 @@ namespace WpfApp1
             new SkGridViewColumn() { Header = "Trend" },
             new SkGridViewColumn() { Header = "Trend2" },
             new SkGridViewColumn() { Header = "Age" },
-            new SkGridViewColumn() { Header = "IsToggle" }
+            new SkGridViewColumn() { Header = "IsToggle" },
+            new SkGridViewColumn() { Header = "Highlighted" }
         ];
 
         public Action<object> RowClick => (object data) =>
@@ -186,6 +187,11 @@ namespace WpfApp1
                                 x += 10;
                             }
                         });
+                        break;
+
+                    case "Highlighted":
+                        template.RendererProperties.BackgroundBrush = new SKPaint { Color = SKColors.LightGreen, StrokeWidth = 1, IsAntialias = true };
+                        template.RendererProperties.BorderBrush = new SKPaint { Color = SKColors.Green, StrokeWidth = 1, IsAntialias = true };
                         break;
                 }
             }
