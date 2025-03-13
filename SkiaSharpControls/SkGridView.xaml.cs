@@ -549,6 +549,12 @@ namespace SkiaSharpControls
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private void MainGrid_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            RemoveWpfElements();
+        }
+
         private void MainGrid_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))

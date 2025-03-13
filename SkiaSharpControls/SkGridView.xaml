@@ -51,24 +51,7 @@
         </Style>
     </UserControl.Resources>
 
-    <!--<Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <ListView Background="Transparent" HorizontalAlignment="Stretch">
-            <ListView.View>
-                <GridView AllowsColumnReorder="true" x:Name="GV" />
-            </ListView.View>
-        </ListView>
-
-        <Grid Grid.Row="1">
-            <ScrollViewer HorizontalAlignment="Stretch" Grid.ColumnSpan="4" VerticalScrollBarVisibility="Auto" IsDeferredScrollingEnabled="True">
-                <skia:SKElement x:Name="SkiaCanvas" PaintSurface="OnPaintSurface" MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown" />
-            </ScrollViewer>
-        </Grid>
-    </Grid>-->
-    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel">
+    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel" MouseDown="MainGrid_MouseDown">
         <!-- Custom Scroll Bar -->
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -80,6 +63,8 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
+
+        <Grid Background="Transparent" Grid.RowSpan="3" Grid.ColumnSpan="2" />
 
         <ListView 
             x:Name="DataListView" Grid.Row="0" 
