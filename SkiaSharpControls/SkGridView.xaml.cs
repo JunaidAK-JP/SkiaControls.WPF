@@ -259,6 +259,77 @@ namespace SkiaSharpControls
             }
         }
 
+        private Dictionary<UIElement, (bool removeOnLostFocus, bool removeOnReturn)> AddedWpfElements { get; set; } = [];
+
+        public void AddWpfElement(FrameworkElement element, bool removeOnLostFocus = true, bool removeOnReturn = true)
+        {
+            VerticalScrollViewer.Value = VerticalScrollViewer.ViewportSize;
+
+            if (VerticalScrollViewer.Track.Visibility != Visibility.Visible)
+            {
+                element.Margin = new Thickness(0, 0, 0, -RowHeight);
+            }
+
+            if (!AddedWpfElements.TryAdd(element, (removeOnLostFocus, removeOnReturn)))
+                AddedWpfElements[element] = (removeOnLostFocus, removeOnReturn);
+
+
+            skiaContainer.Children.Add(element);
+
+            if (element is TextBox)
+                element.Focus();
+
+            element.KeyDown -= RemoveWpfElementOnEnterPressed(element);
+
+            if (removeOnReturn)
+            {
+                element.KeyDown += RemoveWpfElementOnEnterPressed(element);
+            }
+
+            element.IsKeyboardFocusWithinChanged -= RemoveWpfElementOnLostFocus(element);
+
+            if (removeOnLostFocus)
+            {
+                element.IsKeyboardFocusWithinChanged += RemoveWpfElementOnLostFocus(element);
+            }
+        }
+
+        private DependencyPropertyChangedEventHandler RemoveWpfElementOnLostFocus(FrameworkElement element)
+        {
+            return (obj, e) =>
+            {
+                if (e.NewValue is bool isFocussed && !isFocussed)
+                {
+                    skiaContainer.Children.Remove(element);
+                    AddedWpfElements.Remove(element);
+                }
+            };
+        }
+
+        private KeyEventHandler RemoveWpfElementOnEnterPressed(FrameworkElement element)
+        {
+            return (obj, e) =>
+            {
+                if (e.Key == Key.Enter || e.Key == Key.Return)
+                {
+                    skiaContainer.Children.Remove(element);
+                    AddedWpfElements.Remove(element);
+                }
+            };
+        }
+
+        private void RemoveWpfElements()
+        {
+            if (AddedWpfElements.Count > 0)
+            {
+                foreach (var item in AddedWpfElements.Where(x => x.Value.removeOnLostFocus))
+                {
+                    skiaContainer.Children.Remove(item.Key);
+                    AddedWpfElements.Remove(item.Key);
+                }
+            }
+        }
+
         private void OnPaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
             if (IsBusy)
@@ -327,10 +398,13 @@ namespace SkiaSharpControls
                     break;
                 }
             }
+
+            RemoveWpfElements();
         }
 
         private void OnDragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
         {
+            RemoveWpfElements();
             IsBusy = true;
         }
 
@@ -376,6 +450,8 @@ namespace SkiaSharpControls
         private SKFont TextFont;
         private void SkiaCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            RemoveWpfElements();
+
             if (ItemsSource == null)
                 return;
 
@@ -387,6 +463,8 @@ namespace SkiaSharpControls
 
         private void SkiaCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            RemoveWpfElements();
+
             var clickPosition = e.GetPosition(SkiaCanvas);
             int clickedRowIndex = (int)((clickPosition.Y + ScrollOffsetY) / RowHeight);
             int clickedColumnIndex = (int)((clickPosition.X + ScrollOffsetX));
@@ -394,6 +472,7 @@ namespace SkiaSharpControls
 
         private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            RemoveWpfElements();
             ScrollOffsetY = (float)e.NewValue;
             SkiaCanvas.InvalidateVisual();
         }
@@ -451,7 +530,7 @@ namespace SkiaSharpControls
 
             VerticalScrollViewer.Minimum = 0;
             VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
-            VerticalScrollViewer.Maximum = ((TotalRows + 5) * RowHeight) - MainGrid.ActualHeight;
+            VerticalScrollViewer.Maximum = ((TotalRows + 3.3) * RowHeight) - MainGrid.ActualHeight;
 
             PresentationSource source = PresentationSource.FromVisual(this);
             if (source != null)

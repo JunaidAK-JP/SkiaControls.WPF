@@ -1,4 +1,7 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using WpfApp1.UserControls;
 
 namespace WpfApp1
 {
@@ -22,12 +25,32 @@ namespace WpfApp1
 
         private void AddDummyRow(object sender, RoutedEventArgs e)
         {
-            viewModel.MyDataCollection.Add(new MyData
+            //viewModel.MyDataCollection.Add(new MyData
+            //{
+            //    Age = 36,
+            //    Id = 7,
+            //    Name = "KKK"
+            //});
+
+            var textbox = new TextBoxContainer()
             {
-                Age = 36,
-                Id = 7,
-                Name = "KKK"
-            });
+                Width = 50,
+                Height = 18,
+                AllowAlphabet = true,
+                UseCaps = true,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Bottom,
+            };
+
+            textbox.KeyDown += (s, e) =>
+            {
+                if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Return)
+                {
+                    MessageBox.Show(textbox.TextContent);
+                }
+            };
+
+            skiaGrid.AddWpfElement(textbox);
         }
 
         private void ToggleGridLines(object sender, RoutedEventArgs e)

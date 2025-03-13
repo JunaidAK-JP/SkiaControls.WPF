@@ -93,15 +93,16 @@
             </ListView.View>
         </ListView>
 
-        <skia:SKElement 
-            x:Name="SkiaCanvas" 
-            PaintSurface="OnPaintSurface" 
-            Grid.Row="1"
-            VerticalAlignment="Top"
-            HorizontalAlignment="Left"
-            MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
-            MouseDown="SkiaCanvas_MouseDown"
-            MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown" />
+        <Grid x:Name="skiaContainer" Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Left" >
+            <skia:SKElement 
+                x:Name="SkiaCanvas" 
+                PaintSurface="OnPaintSurface"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Left"
+                MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
+                MouseDown="SkiaCanvas_MouseDown"
+                MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown" />
+        </Grid>
 
         <ScrollBar 
             x:Name="VerticalScrollViewer"
