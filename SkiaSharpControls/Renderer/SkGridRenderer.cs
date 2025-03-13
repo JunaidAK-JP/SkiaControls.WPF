@@ -13,6 +13,7 @@ namespace SkiaSharpControls
         private IEnumerable? SelectedItems { get; set; }
         private IEnumerable<SkGridViewColumn>? Columns { get; set; } = [];
         private Func<object, SKColor>? RowBackgroundSelector { get; set; }
+        private Func<object, SKColor>? RowBorderSelector { get; set; }
         private Func<object, string, SkCellTemplate>? CellTemplateSelector { get; set; }
         private ScrollBar? HorizontalScrollViewer { get; set; }
         private ScrollBar? VerticalScrollViewer { get; set; }
@@ -42,6 +43,11 @@ namespace SkiaSharpControls
         public void SetRowBackgroundSelector(Func<object, SKColor> rowBackGroundSelector)
         {
             RowBackgroundSelector = rowBackGroundSelector;
+        }
+
+        public void SetRowBorderSelector(Func<object, SKColor> rowBorderSelector)
+        {
+            RowBorderSelector = rowBorderSelector;
         }
 
         public void SetCellTemplateSelector(Func<object, string, SkCellTemplate> cellTemplateSelector)
@@ -127,6 +133,15 @@ namespace SkiaSharpControls
 
                     currentX += GVColumnWidth;
                 }
+
+                if (RowBorderSelector != null)
+                {
+                    using (var paint = new SKPaint { Color = RowBorderSelector.Invoke(item), StrokeWidth = 1, IsAntialias = true })
+                    {
+                        DrawBorder(canvas, paint, (float)columnSum, 0, currentY, rowHeight);
+                    }
+                }
+
                 currentY += rowHeight;
             }
         }

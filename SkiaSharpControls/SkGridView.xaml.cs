@@ -207,6 +207,23 @@ namespace SkiaSharpControls
             }
         }
 
+        public Func<object, SKColor> RowBorderSelector
+        {
+            get => (Func<object, SKColor>)GetValue(RowBorderSelectorProperty);
+            set => SetValue(RowBorderSelectorProperty, value);
+        }
+
+        public static readonly DependencyProperty RowBorderSelectorProperty =
+            DependencyProperty.Register(nameof(RowBorderSelector), typeof(Func<object, SKColor>), typeof(SkGridView), new PropertyMetadata(default, OnRowBorderTemplateChanged));
+
+        private static void OnRowBorderTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView && e.NewValue is Func<object, SKColor> template)
+            {
+                skGridView.renderer.SetRowBorderSelector(template);
+            }
+        }
+
         public Func<object, string, SkCellTemplate> CellTemplateSelector
         {
             get => (Func<object, string, SkCellTemplate>)GetValue(CellTemplateSelectorProperty);

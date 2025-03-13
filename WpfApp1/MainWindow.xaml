@@ -23,6 +23,7 @@
             ItemsSource="{Binding MyDataCollection, UpdateSourceTrigger=PropertyChanged}" 
             Columns="{Binding Columns, UpdateSourceTrigger=PropertyChanged}" 
             RowBackgroundSelector="{Binding RowBackgroundSelector}" 
+            RowBorderSelector="{Binding RowBorderSelector}" 
             CellTemplateSelector="{Binding CellTemplateSelector}"
             OnRowClicked="{Binding RowClick}" 
             OnCellClicked="{Binding CellClick}"

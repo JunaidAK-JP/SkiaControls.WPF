@@ -116,6 +116,17 @@ namespace WpfApp1
             };
         };
 
+        public Func<object, SKColor> RowBorderSelector => row =>
+        {
+            MyData? myObject = row as MyData;
+
+            return myObject?.Age switch
+            {
+                28 => SKColors.Black,
+                _ => SKColors.Transparent
+            };
+        };
+
         public Func<object, string, SkCellTemplate> CellTemplateSelector { get; set; } = (row, column) =>
         {
             SkCellTemplate template = new();
