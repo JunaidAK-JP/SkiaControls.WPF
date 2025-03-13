@@ -86,7 +86,9 @@
                 HorizontalAlignment="Left"
                 MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
                 MouseDown="SkiaCanvas_MouseDown"
-                MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown" />
+                MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"
+                
+                />
         </Grid>
 
         <ScrollBar 
