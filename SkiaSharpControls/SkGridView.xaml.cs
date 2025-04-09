@@ -106,6 +106,24 @@ namespace SkiaSharpControls
             }
         }
 
+        public ContextMenu ContextMenu
+        {
+            get { return (ContextMenu)GetValue(ContextMenuProperty); }
+            set { SetValue(ContextMenuProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for HeaderContextMenu.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ContextMenuProperty =
+            DependencyProperty.Register(nameof(ContextMenu), typeof(ContextMenu), typeof(SkGridView), new PropertyMetadata(default, OnContextMenuChanged));
+
+        private static void OnContextMenuChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                skGridView.skiaContainer.ContextMenu = e.NewValue as ContextMenu;
+            }
+        }
+
         public ContextMenu ItemsContextMenu
         {
             get { return (ContextMenu)GetValue(ItemsContextMenuProperty); }
@@ -530,21 +548,25 @@ namespace SkiaSharpControls
             object clickedItem = null;
             int index = 0;
 
-            foreach (var item in ItemsSource)
+            //foreach (var item in ItemsSource)
+            //{
+            //    if (clickedRowIndex == index)
+            //    {
+            //        clickedItem = item;
+            //        break;
+            //    }
+            //    index++;
+            //}
+            var ItemSourceAsList = ItemsSource.Cast<object>().ToList();
+            if (clickedRowIndex < ItemSourceAsList.Count)
             {
-                if (clickedRowIndex == index)
-                {
-                    clickedItem = item;
-                    break;
-                }
-                index++;
+                clickedItem = ItemSourceAsList[clickedRowIndex];
+                if (e.ClickCount == 2)
+                    OnRowDoubleClicked?.Invoke(clickedItem);
+
+                if (e.RightButton == MouseButtonState.Pressed)
+                    OnRowRightClicked?.Invoke(clickedItem);
             }
-
-            if (e.ClickCount == 2)
-                OnRowDoubleClicked?.Invoke(clickedItem);
-
-            if (e.RightButton == MouseButtonState.Pressed)
-                OnRowRightClicked?.Invoke(clickedItem);
         }
 
         private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

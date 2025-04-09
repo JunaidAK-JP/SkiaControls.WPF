@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using WpfApp1.UserControls;
 
 namespace WpfApp1
@@ -16,6 +17,17 @@ namespace WpfApp1
         {
             InitializeComponent();
             DataContext = viewModel;
+            DispatcherTimer dispatcherTimer = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromMilliseconds(250),
+            };
+            dispatcherTimer.Tick += dispatcherTimerHander;
+            dispatcherTimer.Start();
+        }
+
+        private void dispatcherTimerHander(object? sender, EventArgs e)
+        {
+            RefreshSkia();
         }
 
         public void RefreshSkia()

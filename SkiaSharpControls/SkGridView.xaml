@@ -78,7 +78,7 @@
             </ListView.View>
         </ListView>
 
-        <Grid x:Name="skiaContainer" Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Left" >
+        <StackPanel Background="Transparent"  x:Name="skiaContainer" Grid.Row="1"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
             <skia:SKElement 
                 x:Name="SkiaCanvas" 
                 PaintSurface="OnPaintSurface"
@@ -89,7 +89,8 @@
                 MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"
                 
                 />
-        </Grid>
+  
+        </StackPanel>
 
         <ScrollBar 
             x:Name="VerticalScrollViewer"

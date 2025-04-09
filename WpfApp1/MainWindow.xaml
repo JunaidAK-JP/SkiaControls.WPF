@@ -27,6 +27,9 @@
             CellTemplateSelector="{Binding CellTemplateSelector}"
             OnRowClicked="{Binding RowClick}" 
             OnCellClicked="{Binding CellClick}"
+            HeaderContextMenu="{Binding ContextMHeader}"
+            ContextMenu="{Binding ContextM,UpdateSourceTrigger=PropertyChanged}"
+            SelectedItems="{Binding SelectedItems,UpdateSourceTrigger=PropertyChanged}"
             ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}"
             />
     </Grid>
