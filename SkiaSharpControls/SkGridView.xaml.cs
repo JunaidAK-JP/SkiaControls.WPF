@@ -31,7 +31,6 @@ namespace SkiaSharpControls
 
             Loaded += (s, o) =>
             {
-
                 SkiaCanvas.Height = GetSkiaHeight(TotalRows);
                 SkiaCanvas.Width = GetSkiaWidth();
                 DataListViewScroll = FindScrollViewer(DataListView);
@@ -84,9 +83,6 @@ namespace SkiaSharpControls
         // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty OnCellClickedProperty =
             DependencyProperty.Register(nameof(OnCellClicked), typeof(Action<object, string>), typeof(SkGridView), new PropertyMetadata(default));
-
-
-
 
         public ContextMenu HeaderContextMenu
         {
@@ -452,30 +448,7 @@ namespace SkiaSharpControls
 
         private void SkiaCanvas_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            // Get mouse position relative to SKElement
-            var point = e.GetPosition(SkiaCanvas);
 
-            int rowIndex = (int)(point.Y / RowHeight);
-            double x = point.X;
-
-            var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
-
-            if (s.Count > rowIndex)
-            {
-                OnRowClicked?.Invoke(s[rowIndex]);
-            }
-
-            foreach (var item in GV.Columns)
-            {
-                x -= item.Width;
-                if (x <= 0)
-                {
-                    OnCellClicked?.Invoke(s[rowIndex], item.Header?.ToString());
-                    break;
-                }
-            }
-
-            RemoveWpfElements();
         }
 
         private void OnDragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
@@ -539,34 +512,36 @@ namespace SkiaSharpControls
 
         private void SkiaCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            RemoveWpfElements();
+            // Get mouse position relative to SKElement
+            var point = e.GetPosition(SkiaCanvas);
 
-            var clickPosition = e.GetPosition(SkiaCanvas);
-            int clickedRowIndex = (int)((clickPosition.Y + ScrollOffsetY) / RowHeight);
-            int clickedColumnIndex = (int)((clickPosition.X + ScrollOffsetX));
+            int rowIndex = (int)((point.Y + ScrollOffsetY) / RowHeight);
+            double x = point.X;
+            int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
 
-            object clickedItem = null;
-            int index = 0;
+            var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
+            if (rowIndex > s.Count - 1)
+                return;
+            OnRowClicked?.Invoke(s[rowIndex]);
 
-            //foreach (var item in ItemsSource)
-            //{
-            //    if (clickedRowIndex == index)
-            //    {
-            //        clickedItem = item;
-            //        break;
-            //    }
-            //    index++;
-            //}
-            var ItemSourceAsList = ItemsSource.Cast<object>().ToList();
-            if (clickedRowIndex < ItemSourceAsList.Count)
+            foreach (var item in GV.Columns)
             {
-                clickedItem = ItemSourceAsList[clickedRowIndex];
-                if (e.ClickCount == 2)
-                    OnRowDoubleClicked?.Invoke(clickedItem);
-
-                if (e.RightButton == MouseButtonState.Pressed)
-                    OnRowRightClicked?.Invoke(clickedItem);
+                x -= item.Width;
+                if (x <= 0)
+                {
+                    OnCellClicked?.Invoke(s[rowIndex], item.Header?.ToString());
+                    break;
+                }
             }
+            if (e.ClickCount == 2)
+                OnRowDoubleClicked?.Invoke(s[rowIndex]);
+
+            if (e.RightButton == MouseButtonState.Pressed)
+                OnRowRightClicked?.Invoke(s[rowIndex]);
+            
+
+          
+            RemoveWpfElements();
         }
 
         private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

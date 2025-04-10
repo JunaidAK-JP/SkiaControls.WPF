@@ -1,4 +1,5 @@
 ﻿using SkiaSharp;
+using SkiaSharpControls.Enum;
 
 namespace SkiaSharpControls.Models
 {
@@ -12,6 +13,7 @@ namespace SkiaSharpControls.Models
         public bool IsToggleButtonOn { get; set; }
 
         public string CellContent { get; set; } = "";
+        public CellContentAlignment CellContentAlignment { get; set; } = CellContentAlignment.Left;
 
         /// <summary>
         /// Gives canvas on which drawing is being done along with current row's x and y positions

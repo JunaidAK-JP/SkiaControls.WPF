@@ -87,12 +87,19 @@ namespace WpfApp1
 
             if (data is MyData myData)
             {
-                if (SelectedItems.Any(x => x.Equals(data)))
+                if (SelectedItems.Count == 1)
                 {
-                    SelectedItems.Remove(myData);
+                    SelectedItems[0] = myData;
                 }
-                else
+                else {
                     SelectedItems.Add(myData);
+                }
+                //  if (SelectedItems.Any(x => x.Equals(data)))
+                {
+                    //  SelectedItems.RemoveAt(0);
+                }
+               // else
+                  //  SelectedItems.Add(myData);
             }
         };
 
@@ -135,7 +142,7 @@ namespace WpfApp1
 
             return myObject?.Age switch
             {
-                28 => SKColors.Black,
+                28 => SKColors.White,
                 _ => SKColors.Transparent
             };
         };
@@ -158,7 +165,7 @@ namespace WpfApp1
             IsAntialias = true
         };
         private static readonly SKPaint BackgroundBrushHighlighting = new SKPaint { Color = SKColors.LightGreen, StrokeWidth = 1, IsAntialias = true };
-        private static readonly SKPaint BorderBrushHighlighting = new SKPaint { Color = SKColors.Green, StrokeWidth = 1, IsAntialias = true };
+        private static readonly SKPaint BorderBrushHighlighting = new SKPaint { Color = SKColors.Blue, StrokeWidth = 1, IsAntialias = true };
 
         public Func<object, string, SkCellTemplate> CellTemplateSelector { get; set; } = (row, column) =>
             {
@@ -276,7 +283,9 @@ namespace WpfApp1
 
                         case "Highlighted":
                             template.RendererProperties.BackgroundBrush = BackgroundBrushHighlighting;
+                            template.CellContent = "hi11";
                             template.RendererProperties.BorderBrush = BorderBrushHighlighting;
+                            template.CellContentAlignment = SkiaSharpControls.Enum.CellContentAlignment.Center;
                             break;
                     }
                 }
