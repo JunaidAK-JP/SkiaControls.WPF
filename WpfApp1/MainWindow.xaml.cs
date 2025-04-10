@@ -17,18 +17,18 @@ namespace WpfApp1
         {
             InitializeComponent();
             DataContext = viewModel;
-            DispatcherTimer dispatcherTimer = new DispatcherTimer()
+            DispatcherTimer dispatcher = new DispatcherTimer()
             {
-                Interval = TimeSpan.FromMilliseconds(250),
+                Interval = TimeSpan.FromMilliseconds(250)
             };
-            dispatcherTimer.Tick += dispatcherTimerHander;
-            dispatcherTimer.Start();
+            dispatcher.Tick += (s, e) =>
+            {
+                RefreshSkia();
+            };
+            dispatcher.Start();
         }
 
-        private void dispatcherTimerHander(object? sender, EventArgs e)
-        {
-            RefreshSkia();
-        }
+     
 
         public void RefreshSkia()
         {
