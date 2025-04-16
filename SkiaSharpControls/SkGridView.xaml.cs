@@ -102,6 +102,31 @@ namespace SkiaSharpControls
             }
         }
 
+        public bool ColumnHeaderVisible
+        {
+            get { return (bool)GetValue(ColumnHeaderVisibleProperty); }
+            set { SetValue(ColumnHeaderVisibleProperty, value); }
+        }
+
+        public static readonly DependencyProperty ColumnHeaderVisibleProperty =
+            DependencyProperty.Register(
+                nameof(ColumnHeaderVisible),
+                typeof(bool),
+                typeof(SkGridView),
+                new PropertyMetadata(default(bool), OnColumnHeaderVisibleChanged));
+
+        private static void OnColumnHeaderVisibleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                bool isVisible = (bool)e.NewValue;
+                if (isVisible)
+                    skGridView.SKGridColumnHeader.Height = new GridLength(21);
+                else
+                    skGridView.SKGridColumnHeader.Height = new GridLength(0);
+            }
+        }
+
         public ContextMenu ContextMenu
         {
             get { return (ContextMenu)GetValue(ContextMenuProperty); }
@@ -538,9 +563,9 @@ namespace SkiaSharpControls
 
             if (e.RightButton == MouseButtonState.Pressed)
                 OnRowRightClicked?.Invoke(s[rowIndex]);
-            
 
-          
+
+
             RemoveWpfElements();
         }
 

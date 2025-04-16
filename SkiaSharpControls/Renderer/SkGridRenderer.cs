@@ -158,7 +158,7 @@ namespace SkiaSharpControls
 
                 if (RowBorderSelector != null)
                 {
-                    using (var paint = new SKPaint { Color = RowBorderSelector.Invoke(item), StrokeWidth = 2, IsAntialias = true })
+                    using (var paint = new SKPaint { Color = RowBorderSelector.Invoke(item), StrokeWidth = 1, IsAntialias = true })
                     {
                         DrawBorder(canvas, paint, (float)columnSum, currentX1, currentY, rowHeight);
                     }
@@ -200,8 +200,8 @@ namespace SkiaSharpControls
         {
             canvas.DrawLine(x, y, x, y + rowHeight, borderColor);
             canvas.DrawLine(x + width, y, x + width, y + rowHeight, borderColor);
-            canvas.DrawLine(x, y + rowHeight, x + width, y + rowHeight, borderColor);//bottom
-            canvas.DrawLine(x, y, x + width, y, borderColor); // top
+            canvas.DrawLine(x, y + rowHeight-0.5f, x + width, y + rowHeight-0.5f, borderColor);//bottom
+            canvas.DrawLine(x, y+0.5f, x + width, y+0.5f, borderColor); // top
         }
        
 

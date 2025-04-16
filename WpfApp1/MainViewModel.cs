@@ -142,7 +142,9 @@ namespace WpfApp1
 
             return myObject?.Age switch
             {
-                28 => SKColors.White,
+                28 => SKColors.Green,
+                29 => SKColors.Green,
+                30 => SKColors.Green,
                 _ => SKColors.Transparent
             };
         };

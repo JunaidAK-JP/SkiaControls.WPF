@@ -59,7 +59,9 @@
             <!-- Scroll bar width -->
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="21"/>
+            <RowDefinition Height="21" x:Name="SKGridColumnHeader">
+                
+            </RowDefinition>
             <RowDefinition Height="*"/>
             <RowDefinition Height="20"/>
         </Grid.RowDefinitions>

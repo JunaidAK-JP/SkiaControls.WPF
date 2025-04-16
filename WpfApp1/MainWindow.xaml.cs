@@ -70,5 +70,10 @@ namespace WpfApp1
             viewModel.ShowGridLines = !viewModel.ShowGridLines;
             skiaGrid.Refresh();
         }
+
+        private void ToggleColumnHeader(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.ColumnHeaderVisible = !skiaGrid.ColumnHeaderVisible;
+        }
     }    
 }
