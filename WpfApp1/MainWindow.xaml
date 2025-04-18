@@ -35,7 +35,7 @@
             OnCellClicked="{Binding CellClick}"
             HeaderContextMenu="{Binding ContextMHeader}"
             ContextMenu="{Binding ContextM,UpdateSourceTrigger=PropertyChanged}"
-            SelectedItems="{Binding SelectedItems,UpdateSourceTrigger=PropertyChanged}"
+            SelectedItems="{Binding SelectedItems,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}"
             ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2"
             ColumnHeaderVisible="False"
             />

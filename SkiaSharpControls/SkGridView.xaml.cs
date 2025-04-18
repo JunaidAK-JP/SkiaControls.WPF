@@ -1,6 +1,7 @@
 ﻿using SkiaSharp;
 using SkiaSharpControls.Models;
 using System.Collections;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
@@ -9,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using WinRT;
 
 namespace SkiaSharpControls
 {
@@ -269,19 +271,20 @@ namespace SkiaSharpControls
             return MainGrid.ActualWidth;
         }
 
-        public IEnumerable SelectedItems
+
+        public ObservableCollection<object> SelectedItems
         {
-            get { return (IEnumerable)GetValue(SelectedItemsProperty); }
+            get { return (ObservableCollection<object>)GetValue(SelectedItemsProperty); }
             set { SetValue(SelectedItemsProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for SelectedItems.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SelectedItemsProperty =
-            DependencyProperty.Register(nameof(SelectedItems), typeof(IEnumerable), typeof(SkGridView), new PropertyMetadata(default, OnSelectedItemsChanged));
+            DependencyProperty.Register(nameof(SelectedItems), typeof(ObservableCollection<object>), typeof(SkGridView), new PropertyMetadata(default, OnSelectedItemsChanged));
 
         private static void OnSelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SkGridView skGridView && e.NewValue is IEnumerable)
+            if (d is SkGridView skGridView && e.NewValue is ObservableCollection<object>)
             {
                 skGridView.SkiaCanvas.InvalidateVisual();
             }
@@ -473,7 +476,51 @@ namespace SkiaSharpControls
 
         private void SkiaCanvas_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            if (ItemsSource.Cast<object>().Count() == 0)
+                return;
+            var point = e.GetPosition(SkiaCanvas);
 
+            int rowIndex = (int)((point.Y + ScrollOffsetY) / RowHeight);
+            double x = point.X;
+            int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
+            var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
+
+            if (SelectedItems == null)
+                SelectedItems = new();
+
+
+            if (rowIndex > s.Count - 1)
+                return;
+
+            foreach (var item in GV.Columns)
+            {
+                x -= item.Width;
+                if (x <= 0)
+                {
+                    OnCellClicked?.Invoke(s[rowIndex], item.Header?.ToString());
+                    break;
+                }
+            }
+            if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
+            {
+                if (SelectedItems.Any(x => x.Equals(s[rowIndex])))
+                {
+                    SelectedItems.Remove(s[rowIndex]);
+                }
+                else
+                {
+                    SelectedItems.Add(s[rowIndex]);
+                }
+            }
+            else if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                SelectedItems.Clear();
+                SelectedItems.Add(s[rowIndex]);
+                OnRowClicked?.Invoke(s[rowIndex]);
+            }
+            if (e.ClickCount == 2)
+                OnRowDoubleClicked?.Invoke(s[rowIndex]);
+            SkiaCanvas.InvalidateVisual();
         }
 
         private void OnDragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
@@ -524,19 +571,8 @@ namespace SkiaSharpControls
         private SKFont TextFont;
         private void SkiaCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            RemoveWpfElements();
-
-            if (ItemsSource == null)
+            if (ItemsSource.Cast<object>().Count() == 0)
                 return;
-
-            if (e.ButtonState == MouseButtonState.Pressed && e.ChangedButton == MouseButton.Right)
-            {
-
-            }
-        }
-
-        private void SkiaCanvas_MouseDown(object sender, MouseButtonEventArgs e)
-        {
             // Get mouse position relative to SKElement
             var point = e.GetPosition(SkiaCanvas);
 
@@ -547,7 +583,8 @@ namespace SkiaSharpControls
             var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
             if (rowIndex > s.Count - 1)
                 return;
-            OnRowClicked?.Invoke(s[rowIndex]);
+
+           
 
             foreach (var item in GV.Columns)
             {
@@ -558,15 +595,18 @@ namespace SkiaSharpControls
                     break;
                 }
             }
-            if (e.ClickCount == 2)
-                OnRowDoubleClicked?.Invoke(s[rowIndex]);
 
             if (e.RightButton == MouseButtonState.Pressed)
                 OnRowRightClicked?.Invoke(s[rowIndex]);
 
 
-
             RemoveWpfElements();
+
+        }
+
+        private void SkiaCanvas_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+
         }
 
         private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
