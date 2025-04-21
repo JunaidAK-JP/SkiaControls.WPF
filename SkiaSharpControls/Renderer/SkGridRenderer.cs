@@ -1,4 +1,5 @@
 ﻿using SkiaSharp;
+using SkiaSharpControls.Enum;
 using SkiaSharpControls.Models;
 using SkiaSharpControls.Renderer;
 using System.Collections;
@@ -18,6 +19,12 @@ namespace SkiaSharpControls
         private ScrollBar? HorizontalScrollViewer { get; set; }
         private ScrollBar? VerticalScrollViewer { get; set; }
         private bool ShowGridLines { get; set; }
+
+        private readonly List<SkGridViewColumn> _visibleColumnsCache = new();
+
+        private SKPaint SelectedRowBackgroundHighlighting = new SKPaint() { Color = SKColor.Parse("#0072C6"), IsAntialias = true };
+        private SKPaint DefaultLinePaint = new SKPaint { Color = SKColor.Parse("#ffffff"), StrokeWidth = 1 };
+        private SKPaint DefaultTextForegroundPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 1 };
 
         public void UpdateItems(IEnumerable items)
         {
@@ -70,7 +77,10 @@ namespace SkiaSharpControls
 
             double columnSum = scrollOffsetX;
             int columnCounter = 0;
-            var visibleColumns = (Columns?.Where(x => x.Width > 0) ?? []).ToList();
+            UpdateVisibleColumns();
+            var visibleColumns = _visibleColumnsCache;//(?.Where(x => x.Width > 0) ?? []).ToList();
+
+
 
             foreach (var item in visibleColumns)
             {
@@ -98,39 +108,51 @@ namespace SkiaSharpControls
             for (int row = firstVisibleRow; row < firstVisibleRow + visibleRowCount; row++)
             {
                 var item = Items?.Cast<object>().ElementAt(row) ?? new List<object>();
-                float currentX = firstVisibleCol == 0 ? 0 : Columns?.Take(firstVisibleCol).Sum(x => (float)x.Width) ?? 0; // Get X position based on columns
+                // float currentX = firstVisibleCol == 0 ? 0 : Columns?.Take(firstVisibleCol).Sum(x => (float)x.Width) ?? 0; // Get X position based on columns
+                float currentX = 0;
+                float currentX1 = 0;
 
+                var columnList = Columns as IList<SkGridViewColumn> ?? Columns.ToList();
+
+                for (int i = 0; i < firstVisibleCol && i < columnList.Count; i++)
+                {
+                    currentX += (float)columnList[i].Width;
+
+                }
+                currentX1 += currentX;
                 for (int colIndex = firstVisibleCol; colIndex < visibleColCount; colIndex++)
                 {
                     float GVColumnWidth = (float)visibleColumns[colIndex].Width;
 
                     var template = CellTemplateSelector?.Invoke(item, visibleColumns.ElementAt(colIndex).Header);
                     string value = template?.CellContent ?? "";
-                    var fontPaint = template?.RendererProperties?.TextForeground ?? new SKPaint { Color = SKColors.Black, StrokeWidth = 1 };
+                    var fontPaint = template?.RendererProperties?.TextForeground ?? DefaultTextForegroundPaint;
                     var textFont = template?.RendererProperties?.TextFont ?? SymbolFont;
-                    var lineColor = template?.RendererProperties?.LineBackground ?? new SKPaint { Color = SKColor.Parse("#ffffff"), StrokeWidth = 1 };
+                    var lineColor = template?.RendererProperties?.LineBackground ?? DefaultLinePaint;
+                    var cellContentAlignment = template?.CellContentAlignment ?? CellContentAlignment.Left;
 
                     fontPaint.IsAntialias = true;
                     lineColor.IsAntialias = true;
 
-                    SKColor bgColor = template?.RendererProperties?.BackgroundBrush?.Color ?? RowBackgroundSelector?.Invoke(item) ?? SKColors.AliceBlue;
+
+
+
+                    SKColor bgColor = template?.RendererProperties?.BackgroundBrush?.Color ?? SKColors.Transparent;//?? RowBackgroundSelector?.Invoke(item) ?? SKColors.AliceBlue;
 
                     using (var paint = new SKPaint { Color = bgColor, StrokeWidth = 1, IsAntialias = true })
                     {
-                        Draw(canvas, colIndex, row, value, fontPaint, textFont, paint, template?.RendererProperties?.BorderBrush, GVColumnWidth, currentX, currentY, false, false, rowHeight, HighlightSelected(item));
 
+                        Draw(canvas, colIndex, row, value, fontPaint, textFont, paint, template?.RendererProperties?.BorderBrush, GVColumnWidth, currentX, currentY, cellContentAlignment, rowHeight, HighlightSelected(item));
                         if (template?.CustomDrawing != null)
                         {
                             template.CustomDrawing.Invoke(canvas, currentX, currentY);
                         }
                     }
-
                     if (ShowGridLines)
                     {
                         canvas.DrawLine(currentX + GVColumnWidth, currentY, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
                         canvas.DrawLine(currentX, currentY + rowHeight, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
                     }
-
                     currentX += GVColumnWidth;
                 }
 
@@ -138,75 +160,160 @@ namespace SkiaSharpControls
                 {
                     using (var paint = new SKPaint { Color = RowBorderSelector.Invoke(item), StrokeWidth = 1, IsAntialias = true })
                     {
-                        DrawBorder(canvas, paint, (float)columnSum, 0, currentY, rowHeight);
+                        DrawBorder(canvas, paint, (float)columnSum, currentX1, currentY, rowHeight);
                     }
                 }
 
                 currentY += rowHeight;
             }
         }
-
-        private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, SKPaint? borderColor, float width, float x, float y, bool isTextMiddle, bool isTextRight, float rowHeight, bool isselectedrow)
+        void UpdateVisibleColumns()
         {
-            DrawRect(canvas, rowIndex, x, y, backColor, width, rowHeight);
+            _visibleColumnsCache.Clear();
 
-            if (borderColor != null)
+            if (Columns == null) return;
+
+            foreach (var col in Columns)
+            {
+                if (col.Width > 0)
+                    _visibleColumnsCache.Add(col);
+            }
+        }
+        private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, SKPaint? borderColor, float width, float x, float y, CellContentAlignment cellContentAlignment, float rowHeight, bool isselectedrow)
+        {
+
+            var rowBackColor = isselectedrow ? SelectedRowBackgroundHighlighting : backColor;
+
+            DrawRect(canvas, rowIndex, x, y, rowBackColor, width, rowHeight);
+
+
+            if (borderColor != null )
             {
                 DrawBorder(canvas, borderColor, width, x, y, rowHeight);
             }
 
-            DrawText(canvas, columnsIndex, rowIndex, value, fontcolor, textFont, width, x, y, isTextMiddle, isTextRight);
+
+            DrawText(canvas, columnsIndex, rowIndex, value, fontcolor, textFont, width, x, y, cellContentAlignment);
         }
 
         private static void DrawBorder(SKCanvas canvas, SKPaint? borderColor, float width, float x, float y, float rowHeight)
         {
-            canvas.DrawLine(x + 1, y, x + 1, y + rowHeight, borderColor);
-            canvas.DrawLine(x + width - 2, y, x + width - 2, y + rowHeight, borderColor);
-            canvas.DrawLine(x, y + rowHeight - 1, x + width, y + rowHeight - 1, borderColor);
-            canvas.DrawLine(x, y, x + width, y, borderColor);
+            canvas.DrawLine(x, y, x, y + rowHeight, borderColor);
+            canvas.DrawLine(x + width, y, x + width, y + rowHeight, borderColor);
+            canvas.DrawLine(x, y + rowHeight-0.5f, x + width, y + rowHeight-0.5f, borderColor);//bottom
+            canvas.DrawLine(x, y+0.5f, x + width, y+0.5f, borderColor); // top
         }
+       
 
-        private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, float width, float x, float y, bool isTextMiddle, bool isTextRight)
+        //private static void DrawBorder(SKCanvas canvas, SKPaint borderPaint, float width, float x, float y, float rowHeight)
+        //{
+        //    if (borderPaint.StrokeWidth <= 0 || width <= 0 || rowHeight <= 0)
+        //        return;
+
+        //    float left = x;
+        //    float top = y+1;
+        //    float right = x-1 + width;
+        //    float bottom = y+1 + rowHeight;
+
+        //    canvas.DrawRect(SKRect.Create(left+1, top, width-1, rowHeight+1), borderPaint);
+        //}
+
+        //private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, float width, float x, float y, bool isTextMiddle, bool isTextRight)
+        //{
+        //    if (width < 10) return;
+
+        //    float textWidth = textFont.MeasureText(value);
+        //    int maxIterations = value.Length; // Prevent infinite loop
+
+        //    while (textWidth > (width - 10) && maxIterations > 0)
+        //    {
+        //        value = value.Length > 1 ? value[..^1] : "";
+        //        textWidth = textFont.MeasureText(value);
+        //        maxIterations--; // Reduce iteration count
+        //    }
+
+        //    float textX = x + 5;
+        //    if (isTextRight)
+        //        textX = x + (width - textWidth) - 5;
+        //    else if (isTextMiddle)
+        //        textX = x + (width - textWidth) / 2;
+
+        //    canvas.DrawText(value, textX, y + 12, textFont, fontcolor);
+
+        //}
+
+
+
+        private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontColor, SKFont textFont, float width, float x, float y, CellContentAlignment cellContentAlignment)
         {
-            if (width < 10) return;
+            if (width < 10 || string.IsNullOrEmpty(value))
+                return;
 
-            float textWidth = textFont.MeasureText(value);
-            int maxIterations = value.Length; // Prevent infinite loop
+            float maxTextWidth = width - 10;
+            ReadOnlySpan<char> span = value;
 
-            while (textWidth > (width - 10) && maxIterations > 0)
+            // Binary search trimming instead of one-by-one
+            int left = 0;
+            int right = span.Length;
+            int fitLength = span.Length;
+
+            while (left <= right)
             {
-                value = value.Length > 1 ? value[..^1] : "";
-                textWidth = textFont.MeasureText(value);
-                maxIterations--; // Reduce iteration count
+                int mid = (left + right) / 2;
+                var testSpan = span.Slice(0, mid);
+                float testWidth = textFont.MeasureText(testSpan, out _);
+
+                if (testWidth <= maxTextWidth)
+                {
+                    fitLength = mid; // update only if it fits
+                    left = mid + 1;
+                }
+                else
+                {
+                    right = mid - 1;
+                }
             }
+
+
+            var finalText = span.Slice(0, fitLength).ToString(); // final trimmed string
+            float finalWidth = textFont.MeasureText(finalText, out _);
 
             float textX = x + 5;
-            if (isTextRight)
-                textX = x + (width - textWidth) - 5;
-            else if (isTextMiddle)
-                textX = x + (width - textWidth) / 2;
+            if (cellContentAlignment == CellContentAlignment.Right)
+                textX = x + width - finalWidth - 5;
+            else if (cellContentAlignment == CellContentAlignment.Center)
+                textX = x + (width - finalWidth) / 2;
 
-            canvas.DrawText(value, textX, y + 12, textFont, fontcolor);
-
+            // You may want to adjust `y + 12` if font size varies
+            canvas.DrawText(finalText, textX, y + 12, textFont, fontColor);
         }
 
-        private void DrawRect(SKCanvas canvas, int rowIndex, float x, float y, SKPaint backColor, float width, float RowHeight)
+        //private void DrawRect(SKCanvas canvas, int rowIndex, float x, float y, SKPaint backColor, float width, float RowHeight)
+        //{
+        //    if (ShowGridLines)
+        //    {
+        //        SKRect rect = new SKRect(x, y, x + width, y + RowHeight);
+        //        canvas.DrawRect(rect, backColor);
+        //    }
+        //    else
+        //    {
+        //        SKRect rect = new SKRect(x - 1, y - 1, x + width, y + RowHeight);
+        //        canvas.DrawRect(rect, backColor);
+        //    }
+        //}
+        private void DrawRect(SKCanvas canvas, int rowIndex, float x, float y, SKPaint backColor, float width, float rowHeight)
         {
-            if (ShowGridLines)
-            {
-                SKRect rect = new SKRect(x, y, x + width, y + RowHeight);
-                canvas.DrawRect(rect, backColor);
-            }
-            else
-            {
-                SKRect rect = new SKRect(x - 1, y - 1, x + width, y + RowHeight);
-                canvas.DrawRect(rect, backColor);
-            }
+            float left = ShowGridLines ? x : x - 1;
+            float top = ShowGridLines ? y : y - 1;
+            float right = x + width;
+            float bottom = y + rowHeight;
+
+            canvas.DrawRect(SKRect.Create(left, top + (0.25f), right - left, bottom - top), backColor);
         }
 
         private bool HighlightSelected(object? item)
         {
-            if (SelectedItems == null) 
+            if (SelectedItems == null)
                 return false;
 
             foreach (var selectedItem in SelectedItems)

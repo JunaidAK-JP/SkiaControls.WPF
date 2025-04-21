@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using WpfApp1.UserControls;
 
 namespace WpfApp1
@@ -16,7 +17,18 @@ namespace WpfApp1
         {
             InitializeComponent();
             DataContext = viewModel;
+            DispatcherTimer dispatcher = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromMilliseconds(250)
+            };
+            dispatcher.Tick += (s, e) =>
+            {
+                RefreshSkia();
+            };
+            dispatcher.Start();
         }
+
+     
 
         public void RefreshSkia()
         {
@@ -57,6 +69,11 @@ namespace WpfApp1
         {
             viewModel.ShowGridLines = !viewModel.ShowGridLines;
             skiaGrid.Refresh();
+        }
+
+        private void ToggleColumnHeader(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.ColumnHeaderVisible = !skiaGrid.ColumnHeaderVisible;
         }
     }    
 }

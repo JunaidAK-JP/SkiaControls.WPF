@@ -12,9 +12,9 @@ namespace SkiaSharpControls.Models
 
         public SkRendererProperties()
         {
-            TextFont = new SKFont() { Size = 11, Typeface = SKTypeface.FromFamilyName("Arial") };
-            TextForeground = new SKPaint { Color = SKColors.Black, IsAntialias = true };
-            LineBackground = new SKPaint { Color = SKColors.Gray, StrokeWidth = 1 };
+            //TextFont = new SKFont() { Size = 11 };
+            //TextForeground = new SKPaint { Color = SKColors.Black, IsAntialias = true };
+            //LineBackground = new SKPaint { Color = SKColors.Gray, StrokeWidth = 1 };
         }
     }
 }

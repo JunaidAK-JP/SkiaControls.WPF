@@ -8,18 +8,24 @@
         mc:Ignorable="d" Background="Transparent"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="311*"/>
+            <ColumnDefinition Width="89*"/>
+        </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Button Height="30" Content="Add Dummy Row" Click="AddDummyRow" />
-        <Button Grid.Row="1" Height="30" Content="Toggle Grid Lines" Click="ToggleGridLines" />
+        <Button Height="30" Content="Add Dummy Row" Click="AddDummyRow" Grid.ColumnSpan="2" />
+        <Button Grid.Row="1" Height="30" Content="Toggle Grid Lines" Click="ToggleGridLines" Grid.ColumnSpan="2" />
+        <Button Grid.Row="2" Height="30" Content="Toggle Column Header" Click="ToggleColumnHeader" Grid.ColumnSpan="2" />
 
         <skia:SkGridView 
-            x:Name="skiaGrid" Grid.Row="2"
+            x:Name="skiaGrid" Grid.Row="3"
             ItemsSource="{Binding MyDataCollection, UpdateSourceTrigger=PropertyChanged}" 
             Columns="{Binding Columns, UpdateSourceTrigger=PropertyChanged}" 
             RowBackgroundSelector="{Binding RowBackgroundSelector}" 
@@ -27,7 +33,11 @@
             CellTemplateSelector="{Binding CellTemplateSelector}"
             OnRowClicked="{Binding RowClick}" 
             OnCellClicked="{Binding CellClick}"
-            ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}"
+            HeaderContextMenu="{Binding ContextMHeader}"
+            ContextMenu="{Binding ContextM,UpdateSourceTrigger=PropertyChanged}"
+            SelectedItems="{Binding SelectedItems,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}"
+            ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2"
+            ColumnHeaderVisible="False"
             />
     </Grid>
 </Window>
