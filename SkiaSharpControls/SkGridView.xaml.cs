@@ -55,6 +55,26 @@ namespace SkiaSharpControls
         public static readonly DependencyProperty OnRowClickedProperty =
             DependencyProperty.Register(nameof(OnRowClicked), typeof(Action<object>), typeof(SkGridView), new PropertyMetadata(default));
 
+        public Action<double> HorizontalScrollBarPositionChanged
+        {
+            get { return (Action<double>)GetValue(HorizontalScrollBarPositionChangedProperty); }
+            set { SetValue(HorizontalScrollBarPositionChangedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty HorizontalScrollBarPositionChangedProperty =
+            DependencyProperty.Register(nameof(HorizontalScrollBarPositionChanged), typeof(Action<double>), typeof(SkGridView), new PropertyMetadata(default));
+
+        public Action<double> VerticalScrollBarPositionChanged
+        {
+            get { return (Action<double>)GetValue(VerticalScrollBarPositionChangedProperty); }
+            set { SetValue(VerticalScrollBarPositionChangedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty VerticalScrollBarPositionChangedProperty =
+            DependencyProperty.Register(nameof(VerticalScrollBarPositionChanged), typeof(Action<double>), typeof(SkGridView), new PropertyMetadata(default));
+
         public Action<object> OnRowRightClicked
         {
             get { return (Action<object>)GetValue(OnRowRightClickedProperty); }
@@ -613,12 +633,14 @@ namespace SkiaSharpControls
         {
             RemoveWpfElements();
             ScrollOffsetY = (float)e.NewValue;
+            VerticalScrollBarPositionChanged?.Invoke(e.NewValue);
             SkiaCanvas.InvalidateVisual();
         }
         private void HorizontalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             ScrollOffsetX = (float)(e.NewValue);
             DataListViewScroll.ScrollToHorizontalOffset(ScrollOffsetX);
+            HorizontalScrollBarPositionChanged?.Invoke(e.NewValue);
             SkiaCanvas.InvalidateVisual();
         }
         private void AddColumnWidthChangedHandler(System.Windows.Controls.ListView listView)

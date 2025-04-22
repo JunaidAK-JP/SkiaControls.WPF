@@ -104,6 +104,17 @@ namespace WpfApp1
             }
         };
 
+        public Action<double> VerticalScrollbarChanged => (double data) =>
+        {
+
+           
+        };
+        public Action<double> HorizontalScrollbarChanged => (double data) =>
+        {
+
+
+        };
+
         public Action<object, string> CellClick => (object data, string header) =>
         {
             if (data is MyData myData)
