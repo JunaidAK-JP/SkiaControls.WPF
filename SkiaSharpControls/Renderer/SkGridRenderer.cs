@@ -23,7 +23,8 @@ namespace SkiaSharpControls
         private readonly List<SkGridViewColumn> _visibleColumnsCache = new();
 
         private SKPaint SelectedRowBackgroundHighlighting = new SKPaint() { Color = SKColor.Parse("#0072C6"), IsAntialias = true };
-        private SKPaint DefaultLinePaint = new SKPaint { Color = SKColor.Parse("#ffffff"), StrokeWidth = 1 };
+        private SKPaint SelectedRowTextColor = new SKPaint { Color = SKColors.White, StrokeWidth = 1 };
+        private SKPaint DefaultLinePaint = new SKPaint { Color = SKColors.White, StrokeWidth = 1 };
         private SKPaint DefaultTextForegroundPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 1 };
 
         public void UpdateItems(IEnumerable items)
@@ -102,7 +103,8 @@ namespace SkiaSharpControls
                 if (columnSum >= HorizontalScrollViewer?.ViewportSize)
                     break;
             }
-
+            if ((firstVisibleRow + visibleRowCount) > Items?.Cast<object>().Count())
+                return;
             float currentY = firstVisibleRow * rowHeight;
 
             for (int row = firstVisibleRow; row < firstVisibleRow + visibleRowCount; row++)
@@ -183,17 +185,18 @@ namespace SkiaSharpControls
         {
 
             var rowBackColor = isselectedrow ? SelectedRowBackgroundHighlighting : backColor;
+            var rowTextColor = isselectedrow ? SelectedRowTextColor : fontcolor;
 
             DrawRect(canvas, rowIndex, x, y, rowBackColor, width, rowHeight);
 
 
-            if (borderColor != null )
+            if (borderColor != null && !isselectedrow)
             {
                 DrawBorder(canvas, borderColor, width, x, y, rowHeight);
             }
 
 
-            DrawText(canvas, columnsIndex, rowIndex, value, fontcolor, textFont, width, x, y, cellContentAlignment);
+            DrawText(canvas, columnsIndex, rowIndex, value, rowTextColor, textFont, width, x, y, cellContentAlignment);
         }
 
         private static void DrawBorder(SKCanvas canvas, SKPaint? borderColor, float width, float x, float y, float rowHeight)

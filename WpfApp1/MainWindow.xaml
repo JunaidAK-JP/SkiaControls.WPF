@@ -37,6 +37,8 @@
             ContextMenu="{Binding ContextM,UpdateSourceTrigger=PropertyChanged}"
             SelectedItems="{Binding SelectedItems,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}"
             ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2"
+            HorizontalScrollBarPositionChanged="{Binding HorizontalScrollbarChanged}"
+            VerticalScrollBarPositionChanged="{Binding VerticalScrollbarChanged}"
             ColumnHeaderVisible="False"
             />
     </Grid>
