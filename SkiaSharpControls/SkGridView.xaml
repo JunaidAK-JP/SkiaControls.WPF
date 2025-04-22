@@ -63,7 +63,7 @@
                 
             </RowDefinition>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid Background="Transparent" Grid.RowSpan="3" Grid.ColumnSpan="2" />
@@ -109,8 +109,10 @@
         <ScrollBar 
             x:Name="HorizontalScrollViewer"
             Grid.Row="2"
+            Height="20"
             Orientation="Horizontal"
             Minimum="0"
+            Visibility="Visible"
             SmallChange="1"
             LargeChange="1"
             Grid.ColumnSpan="2"

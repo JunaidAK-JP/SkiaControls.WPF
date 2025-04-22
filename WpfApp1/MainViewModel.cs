@@ -307,6 +307,16 @@ namespace WpfApp1
                 return template;
             };
 
+        public Action OnColumnsRearranged => () =>
+        {
+
+        };
+
+        public Action OnColumnsResized => () =>
+        {
+
+        };
+
         private bool showGridLines;
 
         public bool ShowGridLines

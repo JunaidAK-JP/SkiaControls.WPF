@@ -40,6 +40,8 @@
             HorizontalScrollBarPositionChanged="{Binding HorizontalScrollbarChanged}"
             VerticalScrollBarPositionChanged="{Binding VerticalScrollbarChanged}"
             ColumnHeaderVisible="False"
+            OnColumnsRearranged="{Binding OnColumnsRearranged}"
+            OnColumnsResized="{Binding OnColumnsResized}"
             />
     </Grid>
 </Window>
