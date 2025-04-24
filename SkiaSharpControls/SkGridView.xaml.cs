@@ -10,7 +10,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using WinRT;
 
 namespace SkiaSharpControls
 {
@@ -36,7 +35,7 @@ namespace SkiaSharpControls
                 SkiaCanvas.Height = GetSkiaHeight(TotalRows);
                 SkiaCanvas.Width = GetSkiaWidth();
                 DataListViewScroll = FindScrollViewer(DataListView);
-                //AddColumnWidthChangedHandler(DataListView);
+                renderer.SetGridLinesVisibility(ShowGridLines);
 
                 UpdateValues();
             };

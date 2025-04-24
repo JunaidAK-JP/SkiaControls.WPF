@@ -307,7 +307,7 @@ namespace WpfApp1
                 return template;
             };
 
-        private bool showGridLines;
+        private bool showGridLines = true;
 
         public bool ShowGridLines
         {
