@@ -319,6 +319,11 @@ namespace WpfApp1
             }
         }
 
+        public Action ColumnsChanged => () =>
+        {
+            OnPropertyChanged(nameof(Columns));
+        };
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

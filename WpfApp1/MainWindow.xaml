@@ -39,7 +39,10 @@
             ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2"
             HorizontalScrollBarPositionChanged="{Binding HorizontalScrollbarChanged}"
             VerticalScrollBarPositionChanged="{Binding VerticalScrollbarChanged}"
+            HorizontalScrollBarVisible="False"
+            VerticalScrollBarVisible="False"
             ColumnHeaderVisible="True"
+            ColumnsChanged="{Binding ColumnsChanged}"
             />
     </Grid>
 </Window>

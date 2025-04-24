@@ -36,7 +36,7 @@ namespace SkiaSharpControls
                 SkiaCanvas.Height = GetSkiaHeight(TotalRows);
                 SkiaCanvas.Width = GetSkiaWidth();
                 DataListViewScroll = FindScrollViewer(DataListView);
-                AddColumnWidthChangedHandler(DataListView);
+                //AddColumnWidthChangedHandler(DataListView);
 
                 UpdateValues();
             };
@@ -142,7 +142,7 @@ namespace SkiaSharpControls
             if (d is SkGridView skGridView)
             {
                 skGridView.SKGridColumnHeader.Height = new GridLength((bool)e.NewValue ? 21 : 0);
-                skGridView.DataListView.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+                skGridView.DataListView.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Hidden;
             }
         }
 
@@ -252,6 +252,7 @@ namespace SkiaSharpControls
                 skGridView.renderer.SetColumns(columns);
                 skGridView.IsBusy = false;
                 skGridView.SkiaCanvas.InvalidateVisual();
+                skGridView.ColumnsChanged?.Invoke();
                 skGridView.GV.Columns.CollectionChanged += skGridView.OnColumnsReordered;
             }
         }
@@ -277,6 +278,16 @@ namespace SkiaSharpControls
                 renderer.SetColumns(columns);
             }
         }
+
+        public Action ColumnsChanged
+        {
+            get { return (Action)GetValue(ColumnsChangedProperty); }
+            set { SetValue(ColumnsChangedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for ColumnsChanged.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ColumnsChangedProperty =
+            DependencyProperty.Register(nameof(ColumnsChanged), typeof(Action), typeof(SkGridView), new PropertyMetadata(default));
 
         public IEnumerable ItemsSource
         {
