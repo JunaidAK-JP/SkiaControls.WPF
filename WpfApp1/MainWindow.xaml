@@ -27,7 +27,7 @@
         <skia:SkGridView 
             x:Name="skiaGrid" Grid.Row="3"
             ItemsSource="{Binding MyDataCollection, UpdateSourceTrigger=PropertyChanged}" 
-            Columns="{Binding Columns, UpdateSourceTrigger=PropertyChanged}" 
+            Columns="{Binding Columns, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
             RowBackgroundSelector="{Binding RowBackgroundSelector}" 
             RowBorderSelector="{Binding RowBorderSelector}" 
             CellTemplateSelector="{Binding CellTemplateSelector}"
@@ -39,9 +39,7 @@
             ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2"
             HorizontalScrollBarPositionChanged="{Binding HorizontalScrollbarChanged}"
             VerticalScrollBarPositionChanged="{Binding VerticalScrollbarChanged}"
-            ColumnHeaderVisible="False"
-            OnColumnsRearranged="{Binding OnColumnsRearranged}"
-            OnColumnsResized="{Binding OnColumnsResized}"
+            ColumnHeaderVisible="True"
             />
     </Grid>
 </Window>

@@ -45,28 +45,6 @@ namespace SkiaSharpControls
         private bool IsBusy { get; set; }
         private SkGridRenderer renderer = new();
 
-        public Action OnColumnsRearranged
-        {
-            get { return (Action)GetValue(OnColumnsRearrangedProperty); }
-            set { SetValue(OnColumnsRearrangedProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for OnColumnsRearranged.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty OnColumnsRearrangedProperty =
-            DependencyProperty.Register(nameof(OnColumnsRearranged), typeof(Action), typeof(SkGridView), new PropertyMetadata(default));
-
-
-        public Action OnColumnsResized
-        {
-            get { return (Action)GetValue(OnColumnsResizedProperty); }
-            set { SetValue(OnColumnsResizedProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for OnColumnsRearranged.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty OnColumnsResizedProperty =
-            DependencyProperty.Register(nameof(OnColumnsResized), typeof(Action), typeof(SkGridView), new PropertyMetadata(default));
-
-
         public Action<object> OnRowClicked
         {
             get { return (Action<object>)GetValue(OnRowClickedProperty); }
@@ -164,6 +142,7 @@ namespace SkiaSharpControls
             if (d is SkGridView skGridView)
             {
                 skGridView.SKGridColumnHeader.Height = new GridLength((bool)e.NewValue ? 21 : 0);
+                skGridView.DataListView.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
@@ -186,6 +165,28 @@ namespace SkiaSharpControls
             if (d is SkGridView skGridView)
             {
                 skGridView.HorizontalScrollViewer.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        public bool VerticalScrollBarVisible
+        {
+            get { return (bool)GetValue(VerticalScrollBarVisibleProperty); }
+            set { SetValue(VerticalScrollBarVisibleProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for VerticalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty VerticalScrollBarVisibleProperty =
+            DependencyProperty.Register(
+                nameof(VerticalScrollBarVisible),
+                typeof(bool),
+                typeof(SkGridView),
+                new PropertyMetadata(true, OnVerticalScrollBarVisibilityChanged));
+
+        private static void OnVerticalScrollBarVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                skGridView.VerticalScrollViewer.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
@@ -274,7 +275,6 @@ namespace SkiaSharpControls
 
                 Columns = columns;
                 renderer.SetColumns(columns);
-                OnColumnsRearranged?.Invoke();
             }
         }
 
@@ -700,7 +700,6 @@ namespace SkiaSharpControls
         {
             UpdateValues();
             SkiaCanvas.InvalidateVisual();
-            OnColumnsResized?.Invoke();
         }
 
         private static ScrollViewer FindScrollViewer(DependencyObject parent)
@@ -769,6 +768,16 @@ namespace SkiaSharpControls
             {
                 VerticalScrollViewer.Value -= e.Delta / 1;
             }
+        }
+
+        public void ScrollToHorizontalOffset(double offset)
+        {
+            HorizontalScrollViewer.Value = offset;
+        }
+
+        public void ScrollToVerticalOffset(double offset)
+        {
+            VerticalScrollViewer.Value = offset;
         }
     }
 }
