@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using SkiaSharpControls.Models;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -28,7 +29,7 @@ namespace WpfApp1
             dispatcher.Start();
         }
 
-     
+
 
         public void RefreshSkia()
         {
@@ -75,5 +76,30 @@ namespace WpfApp1
         {
             skiaGrid.ColumnHeaderVisible = !skiaGrid.ColumnHeaderVisible;
         }
-    }    
+
+        private void ChangeColumnsPosition(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.Columns = [
+                    new SkGridViewColumn() { Header = "Age" },
+                    new SkGridViewColumn() { Header = "Id" },
+                    new SkGridViewColumn() { Header = "Trend" },
+                    new SkGridViewColumn() { Header = "Trend2" },
+                    new SkGridViewColumn() { Header = "Name" },
+                    new SkGridViewColumn() { Header = "IsToggle" },
+                    new SkGridViewColumn() { Header = "Highlighted" }
+        ];
+        }
+        private void ChangeColumnsPosition2(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.Columns = [
+                    new SkGridViewColumn() { Header = "Age"  },
+                    new SkGridViewColumn() { Header = "Id",Width =0 },
+                    new SkGridViewColumn() { Header = "Trend" },
+                    new SkGridViewColumn() { Header = "Trend2" },
+                    new SkGridViewColumn() { Header = "Name" },
+                    new SkGridViewColumn() { Header = "IsToggle",Width=0 },
+                    new SkGridViewColumn() { Header = "Highlighted" }
+        ];
+        }
+    }
 }
