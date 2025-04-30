@@ -112,8 +112,7 @@ namespace WpfApp1
         }; 
         public Action<Key> OnPreviewKeyDownEvent => (Key kye) =>
         {
-            MessageBox.Show("hello");
-           
+            
         };
         public Action OnSkGridDoubleClicked => () =>
         {

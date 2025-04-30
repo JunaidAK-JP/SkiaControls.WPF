@@ -8,11 +8,25 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
+
+        <Style TargetType="{x:Type Thumb}">
+            <Setter Property="SnapsToDevicePixels" Value="true" />
+            <Setter Property="OverridesDefaultStyle" Value="true" />
+            <Setter Property="Width" Value="2" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Grid Width="{TemplateBinding Width}" Height="Auto" Background="{TemplateBinding Background}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="BorderThickness" Value="0,0,0,0.5"/>
-            <Setter Property="BorderBrush" Value="Black" />
+            <Setter Property="BorderBrush" Value="#1E1E1E" />
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Background" Value="#FF3F3F3F"/>
             <Setter Property="Foreground" Value="White"/>
