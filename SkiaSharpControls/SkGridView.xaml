@@ -51,7 +51,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel" MouseDown="MainGrid_MouseDown">
+    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel" LostFocus="SkiaCanvas_LostFocus" MouseDown="MainGrid_MouseDown">
         <!-- Custom Scroll Bar -->
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -66,7 +66,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Background="Transparent" Grid.RowSpan="3" Grid.ColumnSpan="2" />
+        <Grid Background="Transparent" Grid.RowSpan="3" Grid.ColumnSpan="2"  />
 
         <ListView 
             x:Name="DataListView" Grid.Row="0" 
@@ -80,16 +80,18 @@
             </ListView.View>
         </ListView>
 
-        <StackPanel Background="Transparent"  x:Name="skiaContainer" Grid.Row="1"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+        <StackPanel Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
             <skia:SKElement 
+                
                 x:Name="SkiaCanvas" 
+                Focusable="True"
+                FocusVisualStyle="{x:Null}"
                 PaintSurface="OnPaintSurface"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Left"
                 MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
-                MouseDown="SkiaCanvas_MouseDown"
+                KeyDown="SkiaCanvas_KeyDown"
                 MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"
-                
                 />
   
         </StackPanel>

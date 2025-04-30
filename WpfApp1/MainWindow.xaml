@@ -43,10 +43,12 @@
             ShowGridLines="{Binding ShowGridLines, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2"
             HorizontalScrollBarPositionChanged="{Binding HorizontalScrollbarChanged}"
             VerticalScrollBarPositionChanged="{Binding VerticalScrollbarChanged}"
-            HorizontalScrollBarVisible="False"
-            VerticalScrollBarVisible="False"
+            HorizontalScrollBarVisible="True"
+            VerticalScrollBarVisible="True"
             ColumnHeaderVisible="True"
             ColumnsChanged="{Binding ColumnsChanged}"
+            OnPreviewKeyDownEvent="{Binding OnPreviewKeyDownEvent}"
+            OnSkGridDoubleClicked="{Binding OnSkGridDoubleClicked}"
             />
     </Grid>
 </Window>

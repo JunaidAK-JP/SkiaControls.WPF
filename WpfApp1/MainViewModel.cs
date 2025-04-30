@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace WpfApp1
@@ -105,6 +106,16 @@ namespace WpfApp1
         };
 
         public Action<double> VerticalScrollbarChanged => (double data) =>
+        {
+
+           
+        }; 
+        public Action<Key> OnPreviewKeyDownEvent => (Key kye) =>
+        {
+
+           
+        };
+        public Action OnSkGridDoubleClicked => () =>
         {
 
            

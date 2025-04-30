@@ -38,6 +38,7 @@ namespace SkiaSharpControls
                 renderer.SetGridLinesVisibility(ShowGridLines);
 
                 UpdateValues();
+                SkiaCanvas.Focus();
             };
         }
 
@@ -53,6 +54,8 @@ namespace SkiaSharpControls
         // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty OnRowClickedProperty =
             DependencyProperty.Register(nameof(OnRowClicked), typeof(Action<object>), typeof(SkGridView), new PropertyMetadata(default));
+
+
 
         public Action<double> HorizontalScrollBarPositionChanged
         {
@@ -94,6 +97,24 @@ namespace SkiaSharpControls
         public static readonly DependencyProperty OnRowDoubleClickedProperty =
             DependencyProperty.Register(nameof(OnRowDoubleClicked), typeof(Action<object>), typeof(SkGridView), new PropertyMetadata(default));
 
+        public Action OnSkGridDoubleClicked
+        {
+            get { return (Action)GetValue(OnSkGridDoubleClickedProperty); }
+            set { SetValue(OnSkGridDoubleClickedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty OnSkGridDoubleClickedProperty =
+            DependencyProperty.Register(nameof(OnSkGridDoubleClicked), typeof(Action), typeof(SkGridView), new PropertyMetadata(default));
+
+        public Action<Key> OnPreviewKeyDownEvent
+        {
+            get { return (Action<Key>)GetValue(OnPreviewKeyDownEventProperty); }
+            set { SetValue(OnPreviewKeyDownEventProperty, value); }
+        }
+
+        public static readonly DependencyProperty OnPreviewKeyDownEventProperty =
+            DependencyProperty.Register(nameof(OnPreviewKeyDownEvent), typeof(Action<Key>), typeof(SkGridView), new PropertyMetadata(default));
 
         public Action<object, string> OnCellClicked
         {
@@ -154,9 +175,9 @@ namespace SkiaSharpControls
         // Using a DependencyProperty as the backing store for HorizontalScrollBarVisible.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty HorizontalScrollBarVisibleProperty =
             DependencyProperty.Register(
-                nameof(HorizontalScrollBarVisible), 
-                typeof(bool), 
-                typeof(SkGridView), 
+                nameof(HorizontalScrollBarVisible),
+                typeof(bool),
+                typeof(SkGridView),
                 new PropertyMetadata(true, OnHorizontalScrollBarVisibilityChanged));
 
         private static void OnHorizontalScrollBarVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -592,8 +613,41 @@ namespace SkiaSharpControls
             if (e.ClickCount == 2)
                 OnRowDoubleClicked?.Invoke(s[rowIndex]);
             SkiaCanvas.InvalidateVisual();
+            SkiaCanvas.Focus();
         }
+        private void SkiaCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (ItemsSource.Cast<object>().Count() == 0)
+                return;
+            // Get mouse position relative to SKElement
+            var point = e.GetPosition(SkiaCanvas);
 
+            int rowIndex = (int)((point.Y + ScrollOffsetY) / RowHeight);
+            double x = point.X;
+            int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
+
+            var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
+            if (rowIndex > s.Count - 1)
+                return;
+
+
+
+            foreach (var item in GV.Columns)
+            {
+                x -= item.Width;
+                if (x <= 0)
+                {
+                    OnCellClicked?.Invoke(s[rowIndex], item.Header?.ToString());
+                    break;
+                }
+            }
+
+            if (e.RightButton == MouseButtonState.Pressed)
+                OnRowRightClicked?.Invoke(s[rowIndex]);
+
+            RemoveWpfElements();
+            SkiaCanvas.Focus();
+        }
         private void OnDragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
         {
             RemoveWpfElements();
@@ -640,45 +694,7 @@ namespace SkiaSharpControls
         private ScrollViewer DataListViewScroll;
         private float DpiScalling = 0;
         private SKFont TextFont;
-        private void SkiaCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (ItemsSource.Cast<object>().Count() == 0)
-                return;
-            // Get mouse position relative to SKElement
-            var point = e.GetPosition(SkiaCanvas);
 
-            int rowIndex = (int)((point.Y + ScrollOffsetY) / RowHeight);
-            double x = point.X;
-            int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
-
-            var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
-            if (rowIndex > s.Count - 1)
-                return;
-
-           
-
-            foreach (var item in GV.Columns)
-            {
-                x -= item.Width;
-                if (x <= 0)
-                {
-                    OnCellClicked?.Invoke(s[rowIndex], item.Header?.ToString());
-                    break;
-                }
-            }
-
-            if (e.RightButton == MouseButtonState.Pressed)
-                OnRowRightClicked?.Invoke(s[rowIndex]);
-
-
-            RemoveWpfElements();
-
-        }
-
-        private void SkiaCanvas_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-
-        }
 
         private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -764,6 +780,7 @@ namespace SkiaSharpControls
 
         private void MainGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            SkiaCanvas.Focus();
             RemoveWpfElements();
         }
 
@@ -783,6 +800,37 @@ namespace SkiaSharpControls
         public void ScrollToHorizontalOffset(double offset)
         {
             HorizontalScrollViewer.Value = offset;
+        }
+
+        private void SkiaCanvas_KeyDown(object sender, KeyEventArgs e)
+        {
+            OnPreviewKeyDownEvent.Invoke(e.Key);
+        }
+
+        private void SkiaCanvas_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if(SelectedItems.Count > 0)
+            {
+                SelectedItems.Clear();
+                SkiaCanvas.InvalidateVisual();
+            }
+        }
+
+        private void skiaContainer_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+
+            if (SelectedItems.Count > 0 && !(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
+            {
+                SelectedItems.Clear();
+                SkiaCanvas.InvalidateVisual();
+            }
+            if (e.OriginalSource is not SkiaSharp.Views.WPF.SKElement)
+            {
+                if (e.ClickCount == 2)
+                {
+                    OnSkGridDoubleClicked.Invoke();
+                }
+            }
         }
 
         public void ScrollToVerticalOffset(double offset)
