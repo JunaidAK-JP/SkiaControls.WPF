@@ -811,24 +811,23 @@ namespace SkiaSharpControls
         {
             if(SelectedItems.Count > 0)
             {
-                SelectedItems.Clear();
+                SelectedItems?.Clear();
                 SkiaCanvas.InvalidateVisual();
             }
         }
 
         private void skiaContainer_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-
-            if (SelectedItems.Count > 0 && !(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
-            {
-                SelectedItems.Clear();
-                SkiaCanvas.InvalidateVisual();
-            }
             if (e.OriginalSource is not SkiaSharp.Views.WPF.SKElement)
             {
+                if (SelectedItems.Count > 0 && !(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
+                {
+                    SelectedItems.Clear();
+                    SkiaCanvas.InvalidateVisual();
+                }
                 if (e.ClickCount == 2)
                 {
-                    OnSkGridDoubleClicked.Invoke();
+                    OnSkGridDoubleClicked?.Invoke();
                 }
             }
         }
