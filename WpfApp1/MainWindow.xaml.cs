@@ -80,7 +80,7 @@ namespace WpfApp1
         private void ChangeColumnsPosition(object sender, RoutedEventArgs e)
         {
             skiaGrid.Columns = [
-                    new SkGridViewColumn() { Header = "Age" },
+                    new SkGridViewColumn() { Header = "Age" , DisplayHeader="Age (= 20)" },
                     new SkGridViewColumn() { Header = "Id" },
                     new SkGridViewColumn() { Header = "Trend" },
                     new SkGridViewColumn() { Header = "Trend2" },
@@ -93,13 +93,28 @@ namespace WpfApp1
         {
             skiaGrid.Columns = [
                     new SkGridViewColumn() { Header = "Age"  },
-                    new SkGridViewColumn() { Header = "Id",Width =0 },
+                    new SkGridViewColumn() { Header = "Id",IsVisible =false },
                     new SkGridViewColumn() { Header = "Trend" },
                     new SkGridViewColumn() { Header = "Trend2" },
                     new SkGridViewColumn() { Header = "Name" },
-                    new SkGridViewColumn() { Header = "IsToggle",Width=0 },
+                    new SkGridViewColumn() { Header = "IsToggle" },
                     new SkGridViewColumn() { Header = "Highlighted" }
         ];
+        }
+
+        private void ToggleResize(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.CanUserResizeColumns = !skiaGrid.CanUserResizeColumns;
+        }
+
+        private void ToggleSort(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.CanUserSortColumns = !skiaGrid.CanUserSortColumns;
+        }
+
+        private void ToggleReorder(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.CanUserReorderColumns = !skiaGrid.CanUserReorderColumns;
         }
     }
 }

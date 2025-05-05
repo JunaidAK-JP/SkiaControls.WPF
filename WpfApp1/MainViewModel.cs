@@ -1,4 +1,5 @@
 ﻿using SkiaSharp;
+using SkiaSharpControls.Enum;
 using SkiaSharpControls.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -23,7 +24,7 @@ namespace WpfApp1
 
         private ObservableCollection<MyData> myDataCollection =
         [
-            new() { Id = 1, Name = "Alice", Age = 25 },
+            new() { Id = 1, Name = "AliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAlice", Age = 25 },
             new() { Id = 2, Name = "Alice 1", Age = 26 },
             new() { Id = 3, Name = "Alice 2", Age = 27 },
             new() { Id = 4, Name = "Alice 3", Age = 28 },
@@ -74,8 +75,8 @@ namespace WpfApp1
 
         public IEnumerable<SkGridViewColumn> Columns { get; set; } =
         [
-            new SkGridViewColumn() { Header = "Id" },
-            new SkGridViewColumn() { Header = "Name" },
+            new SkGridViewColumn() { Header = "Id",CanUserResize=false,CanUserSort=false,CanUserReorder=false },
+            new SkGridViewColumn() { Header = "Name", IsVisible=false },
             new SkGridViewColumn() { Header = "Trend" },
             new SkGridViewColumn() { Header = "Trend2" },
             new SkGridViewColumn() { Header = "Age" },
@@ -106,6 +107,11 @@ namespace WpfApp1
         };
 
         public Action<double> VerticalScrollbarChanged => (double data) =>
+        {
+
+           
+        }; 
+        public Action<string,SkGridViewColumnSort> SortDirectionChanged => (string column, SkGridViewColumnSort Direction) =>
         {
 
            
@@ -217,6 +223,7 @@ namespace WpfApp1
 
                         case "Name":
                             template.CellContent = myData.Name;
+                            template.CellContentAlignment = CellContentAlignment.Right;
                             break;
 
                         case "Age":

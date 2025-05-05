@@ -22,11 +22,14 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Button Height="30" Content="Add Dummy Row" Click="AddDummyRow" Grid.ColumnSpan="2" />
-        <Button Grid.Row="1" Height="30" Content="Toggle Grid Lines" Click="ToggleGridLines" Grid.ColumnSpan="2" />
-        <Button Grid.Row="2" Height="30" Content="Toggle Column Header" Click="ToggleColumnHeader" Grid.ColumnSpan="2" />
-        <Button Grid.Row="3" Height="30" Content="Change Columns Position" Click="ChangeColumnsPosition" Grid.ColumnSpan="2" />
-        <Button Grid.Row="4" Height="30" Content="Change Columns Position 2" Click="ChangeColumnsPosition2" Grid.ColumnSpan="2" />
+        <Button Grid.Column="0" Height="30" Content="Add Dummy Row" Click="AddDummyRow" />
+        <Button Grid.Column="0" Grid.Row="1" Height="30" Content="Toggle Grid Lines" Click="ToggleGridLines" />
+        <Button Grid.Column="0" Grid.Row="2" Height="30" Content="Toggle Column Header" Click="ToggleColumnHeader" />
+        <Button Grid.Column="0" Grid.Row="3" Height="30" Content="Change Columns Position" Click="ChangeColumnsPosition" />
+        <Button Grid.Column="0" Grid.Row="4" Height="30" Content="Change Columns Position 2" Click="ChangeColumnsPosition2"  />
+        <Button Grid.Column="1" Grid.Row="0" Height="30" Content="Toggle Resize" Click="ToggleResize"  />
+        <Button Grid.Column="1" Grid.Row="1" Height="30" Content="Toggle Sort" Click="ToggleSort"  />
+        <Button Grid.Column="1" Grid.Row="2" Height="30" Content="Toggle Reorder" Click="ToggleReorder"  />
 
         <skia:SkGridView 
             x:Name="skiaGrid" Grid.Row="5"
@@ -49,6 +52,7 @@
             ColumnsChanged="{Binding ColumnsChanged}"
             OnPreviewKeyDownEvent="{Binding OnPreviewKeyDownEvent}"
             OnSkGridDoubleClicked="{Binding OnSkGridDoubleClicked}"
+            SortDirectionChanged="{Binding SortDirectionChanged}"
             />
     </Grid>
 </Window>
