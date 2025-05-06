@@ -358,22 +358,22 @@ namespace SkiaSharpControls
 
                 foreach (var column in columns)
                 {
-                    var headerStyle = new Style(typeof(DataGridColumnHeader));
-                    headerStyle.Setters.Add(new Setter(HorizontalContentAlignmentProperty, column.ContentAlignment == Enum.CellContentAlignment.Right ? HorizontalAlignment.Right :
-                                                                                         column.ContentAlignment == Enum.CellContentAlignment.Left ? HorizontalAlignment.Left : HorizontalAlignment.Center));
+                    //var headerStyle = new Style(typeof(DataGridColumnHeader));
+                    //headerStyle.Setters.Add(new Setter(HorizontalContentAlignmentProperty, column.ContentAlignment == Enum.CellContentAlignment.Right ? HorizontalAlignment.Right :
+                    //                                                                     column.ContentAlignment == Enum.CellContentAlignment.Left ? HorizontalAlignment.Left : HorizontalAlignment.Center));
                     if (column.BackColor != null)
                     {
                         string colorString = column.BackColor;
                         var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorString);
                         var brush = new SolidColorBrush(color);
-                        headerStyle.Setters.Add(new Setter(BackgroundProperty, brush));
+                        //headerStyle.Setters.Add(new Setter(BackgroundProperty, brush));
                     }
                     var dgColumn = new DataGridTextColumn
                     {
                         Header = column.DisplayHeader ?? column.Header,
                         Width = column.Width,
                         Visibility = !column.IsVisible ? Visibility.Collapsed : Visibility.Visible,
-                        HeaderStyle = headerStyle,
+                        //HeaderStyle = headerStyle,
                         MinWidth = 20,
                     };
                     if (column.CanUserResize.HasValue)

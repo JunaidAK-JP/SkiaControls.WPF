@@ -63,6 +63,45 @@
                 </Trigger>
             </Style.Triggers>
         </Style>-->
+
+
+        <Style TargetType="{x:Type DataGrid}">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="RowBackground" Value="#181818" />
+            <Setter Property="AlternatingRowBackground" Value="#0C0C0C" />
+            <Setter Property="VerticalGridLinesBrush" Value="Gray" />
+            <Setter Property="HorizontalGridLinesBrush" Value="Gray" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="EnableColumnVirtualization" Value="True" />
+            <Setter Property="EnableRowVirtualization" Value="True" />
+            <Setter Property="CanUserResizeColumns" Value="True" />
+            <Setter Property="CanUserSortColumns" Value="True" />
+            <Setter Property="IsReadOnly" Value="True" />
+        </Style>
+
+        <Style TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="BorderThickness" Value="0.5"/>
+            <Setter Property="BorderBrush" Value="White" />
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="#FF3F3F3F"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="3,3,5,3" />
+            <Setter Property="MinWidth" Value="10" />
+
+            <Style.Triggers>
+                <Trigger Property="SortDirection" Value="Ascending">
+                    <Setter Property="Background" Value="LightGreen"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+                <Trigger Property="SortDirection" Value="Descending">
+                    <Setter Property="Background" Value="LightSalmon"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
     </UserControl.Resources>
 
     <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel" LostFocus="SkiaCanvas_LostFocus" MouseDown="MainGrid_MouseDown">
@@ -99,27 +138,12 @@
                   ScrollViewer.VerticalScrollBarVisibility="Hidden" 
                   Background="Black" 
                   BorderThickness="0"
-                  HorizontalAlignment="Stretch"
-                  
+                  HorizontalAlignment="Stretch"                  
                   ColumnReordered="DataListView_ColumnReordered"
                   HeadersVisibility="Column"
                   Sorting="DataListView_Sorting"
                   
                   >
-            <DataGrid.ColumnHeaderStyle>
-                <Style TargetType="DataGridColumnHeader">
-                    <Style.Triggers>
-                        <Trigger Property="SortDirection" Value="Ascending">
-                            <Setter Property="Background" Value="LightGreen"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                        </Trigger>
-                        <Trigger Property="SortDirection" Value="Descending">
-                            <Setter Property="Background" Value="LightSalmon"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.ColumnHeaderStyle>
         </DataGrid>
 
         <StackPanel Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
