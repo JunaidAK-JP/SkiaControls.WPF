@@ -20,30 +20,32 @@ namespace WpfApp1
             ContextM = new();
             ContextM.Items.Add(new MenuItem { Header = "Bilal1" });
             ContextM.Items.Add(new MenuItem { Header = "Bilal2" });
+
+           
         }
 
         private ObservableCollection<MyData> myDataCollection =
         [
             new() { Id = 1, Name = "AliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAliceAlice", Age = 25 },
             new() { Id = 2, Name = "Alice 1", Age = 26 },
-            new() { Id = 3, Name = "Alice 2", Age = 27 },
+            new() { Id = 3, Name = "Alice 2", Age = 23453 },
             new() { Id = 4, Name = "Alice 3", Age = 28 },
-            new() { Id = 5, Name = "Alice 4", Age = 29 },
+            new() { Id = 5, Name = "Alice 4", Age = 23459 },
+            new() { Id = 6, Name = "Alice 5", Age = 30 },
+            new() { Id = 7, Name = "Alice 6", Age = 32345 },
+
+            new() { Id = 1, Name = "Alice", Age = 25 },
+            new() { Id = 2, Name = "Alice 1", Age = 226 },
+            new() { Id = 3, Name = "Alice 2", Age = 22347 },
+            new() { Id = 4, Name = "Alice 3", Age = 22348 },
+            new() { Id = 5, Name = "Alice 4", Age = 22349 },
             new() { Id = 6, Name = "Alice 5", Age = 30 },
             new() { Id = 7, Name = "Alice 6", Age = 35 },
 
             new() { Id = 1, Name = "Alice", Age = 25 },
             new() { Id = 2, Name = "Alice 1", Age = 26 },
-            new() { Id = 3, Name = "Alice 2", Age = 27 },
-            new() { Id = 4, Name = "Alice 3", Age = 28 },
-            new() { Id = 5, Name = "Alice 4", Age = 29 },
-            new() { Id = 6, Name = "Alice 5", Age = 30 },
-            new() { Id = 7, Name = "Alice 6", Age = 35 },
-
-            new() { Id = 1, Name = "Alice", Age = 25 },
-            new() { Id = 2, Name = "Alice 1", Age = 26 },
-            new() { Id = 3, Name = "Alice 2", Age = 27 },
-            new() { Id = 4, Name = "Alice 3", Age = 28 },
+            new() { Id = 3, Name = "Alice 2", Age = 24227 },
+            new() { Id = 4, Name = "Alice 3", Age = 22348 },
             new() { Id = 5, Name = "Alice 4", Age = 29 },
             new() { Id = 6, Name = "Alice 5", Age = 30 },
             new() { Id = 7, Name = "Alice 6", Age = 35 },
@@ -73,10 +75,10 @@ namespace WpfApp1
             (Application.Current.MainWindow as MainWindow)?.RefreshSkia();
         }
 
-        public IEnumerable<SkGridViewColumn> Columns { get; set; } =
+        public List<SkGridViewColumn> Columns { get; set; } =
         [
             new SkGridViewColumn() { Header = "Id",CanUserResize=false,CanUserSort=false,CanUserReorder=false,ContentAlignment = CellContentAlignment.Right },
-            new SkGridViewColumn() { Header = "Name", IsVisible=false },
+            new SkGridViewColumn() { Header = "Name", IsVisible=true },
             new SkGridViewColumn() { Header = "Trend" },
             new SkGridViewColumn() { Header = "Trend2" },
             new SkGridViewColumn() { Header = "Age" },
@@ -89,7 +91,7 @@ namespace WpfApp1
 
             if (data is MyData myData)
             {
-                var r= SelectedItems.Count();
+                var r = SelectedItems.Count();
                 //if (SelectedItems.Count == 1)
                 //{
                 //    SelectedItems[0] = myData;
@@ -97,33 +99,33 @@ namespace WpfApp1
                 //else {
                 //    SelectedItems.Add(myData);
                 //}
-            //    if (SelectedItems.Any(x => x.Equals(data)))
-            //    {
-            //        SelectedItems.Remove(myData);
-            //    }
-            //    else
-            //        SelectedItems.Add(myData);
+                //    if (SelectedItems.Any(x => x.Equals(data)))
+                //    {
+                //        SelectedItems.Remove(myData);
+                //    }
+                //    else
+                //        SelectedItems.Add(myData);
             }
         };
 
         public Action<double> VerticalScrollbarChanged => (double data) =>
         {
 
-           
-        }; 
-        public Action<string,SkGridViewColumnSort> SortDirectionChanged => (string column, SkGridViewColumnSort Direction) =>
+
+        };
+        public Action<string, SkGridViewColumnSort> SortDirectionChanged => (string column, SkGridViewColumnSort Direction) =>
         {
 
-           
-        }; 
+
+        };
         public Action<Key> OnPreviewKeyDownEvent => (Key kye) =>
         {
-            
+
         };
         public Action OnSkGridDoubleClicked => () =>
         {
 
-           
+
         };
         public Action<double> HorizontalScrollbarChanged => (double data) =>
         {

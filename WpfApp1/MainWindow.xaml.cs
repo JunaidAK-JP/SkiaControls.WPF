@@ -79,7 +79,7 @@ namespace WpfApp1
 
         private void ChangeColumnsPosition(object sender, RoutedEventArgs e)
         {
-            skiaGrid.Columns = [
+            skiaGrid.Columns = new List<SkGridViewColumn>() {
                     new SkGridViewColumn() { Header = "Age" , DisplayHeader="Age (= 20)" },
                     new SkGridViewColumn() { Header = "Id" },
                     new SkGridViewColumn() { Header = "Trend" },
@@ -87,11 +87,11 @@ namespace WpfApp1
                     new SkGridViewColumn() { Header = "Name" },
                     new SkGridViewColumn() { Header = "IsToggle" },
                     new SkGridViewColumn() { Header = "Highlighted" }
-        ];
+        };
         }
         private void ChangeColumnsPosition2(object sender, RoutedEventArgs e)
         {
-            skiaGrid.Columns = [
+            skiaGrid.Columns = new List<SkGridViewColumn>() {
                     new SkGridViewColumn() { Header = "Age"  },
                     new SkGridViewColumn() { Header = "Id",IsVisible =false },
                     new SkGridViewColumn() { Header = "Trend" },
@@ -99,7 +99,7 @@ namespace WpfApp1
                     new SkGridViewColumn() { Header = "Name" },
                     new SkGridViewColumn() { Header = "IsToggle" },
                     new SkGridViewColumn() { Header = "Highlighted" }
-        ];
+            };
         }
 
         private void ToggleResize(object sender, RoutedEventArgs e)
