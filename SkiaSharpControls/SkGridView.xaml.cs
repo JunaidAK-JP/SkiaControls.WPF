@@ -358,16 +358,18 @@ namespace SkiaSharpControls
 
                 foreach (var column in columns)
                 {
-                    //var headerStyle = new Style(typeof(DataGridColumnHeader));
-                    //headerStyle.Setters.Add(new Setter(HorizontalContentAlignmentProperty, column.ContentAlignment == Enum.CellContentAlignment.Right ? HorizontalAlignment.Right :
-                    //                                                                     column.ContentAlignment == Enum.CellContentAlignment.Left ? HorizontalAlignment.Left : HorizontalAlignment.Center));
-                    if (column.BackColor != null)
-                    {
-                        string colorString = column.BackColor;
-                        var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorString);
-                        var brush = new SolidColorBrush(color);
-                        //headerStyle.Setters.Add(new Setter(BackgroundProperty, brush));
-                    }
+                    var headerStyle = new Style(typeof(DataGridColumnHeader));
+                    headerStyle.Setters.Add(new Setter(HorizontalContentAlignmentProperty, column.ContentAlignment == Enum.CellContentAlignment.Right ? HorizontalAlignment.Right :
+                                                                                         column.ContentAlignment == Enum.CellContentAlignment.Left ? HorizontalAlignment.Left : HorizontalAlignment.Center));
+                   
+                    //headerStyle.Setters.Add(new Setter(BackgroundProperty, GetColorBrush(column.BackColor ?? "#FF3F3F3F")));
+                    //headerStyle.Setters.Add(new Setter(ForegroundProperty, GetColorBrush("#FFFFFF")));
+                    //headerStyle.Setters.Add(new Setter(BorderThicknessProperty, new Thickness(0.5)));
+                    //headerStyle.Setters.Add(new Setter(BorderBrushProperty, GetColorBrush("#FFFFFF")));
+                    //headerStyle.Setters.Add(new Setter(PaddingProperty, new Thickness(5, 3, 5, 3)));
+                    
+
+
                     var dgColumn = new DataGridTextColumn
                     {
                         Header = column.DisplayHeader ?? column.Header,
@@ -406,6 +408,13 @@ namespace SkiaSharpControls
                 //skGridView.ColumnsChanged?.Invoke();
                 //skGridView.GV.Columns.CollectionChanged += skGridView.OnColumnsReordered;
             }
+        }
+
+        private static SolidColorBrush GetColorBrush(string Color)
+        {
+            string bgcolorString = Color;
+            var bgcolor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(bgcolorString);
+            return new SolidColorBrush(bgcolor);
         }
 
         //private void OnColumnsReordered(object? sender, NotifyCollectionChangedEventArgs e)
@@ -1050,7 +1059,10 @@ namespace SkiaSharpControls
                 ? SkGridViewColumnSort.Ascending
                 : SkGridViewColumnSort.Descending;
 
-            column.SortDirection = column.SortDirection;
+            column.SortDirection =column.SortDirection != ListSortDirection.Ascending
+                ? ListSortDirection.Ascending
+                : ListSortDirection.Descending;
+
             foreach (var item in Columns)
             {
                 item.GridViewColumnSort = SkGridViewColumnSort.None;

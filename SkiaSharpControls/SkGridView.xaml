@@ -138,7 +138,7 @@
                   ScrollViewer.VerticalScrollBarVisibility="Hidden" 
                   Background="Black" 
                   BorderThickness="0"
-                  HorizontalAlignment="Stretch"                  
+                  HorizontalAlignment="Left"                  
                   ColumnReordered="DataListView_ColumnReordered"
                   HeadersVisibility="Column"
                   Sorting="DataListView_Sorting"

@@ -75,7 +75,7 @@ namespace WpfApp1
 
         public IEnumerable<SkGridViewColumn> Columns { get; set; } =
         [
-            new SkGridViewColumn() { Header = "Id",CanUserResize=false,CanUserSort=false,CanUserReorder=false },
+            new SkGridViewColumn() { Header = "Id",CanUserResize=false,CanUserSort=false,CanUserReorder=false,ContentAlignment = CellContentAlignment.Right },
             new SkGridViewColumn() { Header = "Name", IsVisible=false },
             new SkGridViewColumn() { Header = "Trend" },
             new SkGridViewColumn() { Header = "Trend2" },
