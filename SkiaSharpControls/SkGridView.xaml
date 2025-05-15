@@ -9,7 +9,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
 
-        <Style TargetType="{x:Type Thumb}">
+        <!--<Style TargetType="{x:Type Thumb}">
             <Setter Property="SnapsToDevicePixels" Value="true" />
             <Setter Property="OverridesDefaultStyle" Value="true" />
             <Setter Property="Width" Value="2" />
@@ -62,7 +62,46 @@
                     <Setter Property="IsHitTestVisible" Value="False" />
                 </Trigger>
             </Style.Triggers>
+        </Style>-->
+
+
+        <Style TargetType="{x:Type DataGrid}">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="RowBackground" Value="#181818" />
+            <Setter Property="AlternatingRowBackground" Value="#0C0C0C" />
+            <Setter Property="VerticalGridLinesBrush" Value="Gray" />
+            <Setter Property="HorizontalGridLinesBrush" Value="Gray" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="EnableColumnVirtualization" Value="True" />
+            <Setter Property="EnableRowVirtualization" Value="True" />
+            <Setter Property="CanUserResizeColumns" Value="True" />
+            <Setter Property="CanUserSortColumns" Value="True" />
+            <Setter Property="IsReadOnly" Value="True" />
         </Style>
+
+        <Style TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="BorderThickness" Value="0.5"/>
+            <Setter Property="BorderBrush" Value="White" />
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="#FF3F3F3F"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="3,3,5,3" />
+            <Setter Property="MinWidth" Value="10" />
+
+            <Style.Triggers>
+                <Trigger Property="SortDirection" Value="Ascending">
+                    <Setter Property="Background" Value="LightGreen"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+                <Trigger Property="SortDirection" Value="Descending">
+                    <Setter Property="Background" Value="LightSalmon"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
     </UserControl.Resources>
 
     <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel" LostFocus="SkiaCanvas_LostFocus" MouseDown="MainGrid_MouseDown">
@@ -74,7 +113,7 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="21" x:Name="SKGridColumnHeader">
-                
+
             </RowDefinition>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -82,7 +121,7 @@
 
         <Grid Background="Transparent" Grid.RowSpan="3" Grid.ColumnSpan="2"  />
 
-        <ListView 
+        <!--<ListView 
             x:Name="DataListView" Grid.Row="0" 
             ScrollViewer.HorizontalScrollBarVisibility="Hidden" 
             ScrollViewer.VerticalScrollBarVisibility="Hidden" 
@@ -92,11 +131,25 @@
             <ListView.View>
                 <GridView AllowsColumnReorder="true" x:Name="GV" />
             </ListView.View>
-        </ListView>
+        </ListView>-->
+        <DataGrid Grid.Row="0" 
+                  Grid.Column="0"
+                  x:Name="DataListView"
+                  ScrollViewer.HorizontalScrollBarVisibility="Hidden" 
+                  ScrollViewer.VerticalScrollBarVisibility="Hidden" 
+                  Background="Black" 
+                  BorderThickness="0"
+                  HorizontalAlignment="Left"                  
+                  ColumnReordered="DataListView_ColumnReordered"
+                  HeadersVisibility="Column"
+                  Loaded="DataListView_Loaded"
+                  Sorting="DataListView_Sorting"
+                  
+                  >
+        </DataGrid>
 
-        <StackPanel Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
-            <skia:SKElement 
-                
+        <StackPanel Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+            <skia:SKElement    
                 x:Name="SkiaCanvas" 
                 Focusable="True"
                 FocusVisualStyle="{x:Null}"
@@ -107,7 +160,6 @@
                 KeyDown="SkiaCanvas_KeyDown"
                 MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"
                 />
-  
         </StackPanel>
 
         <ScrollBar 

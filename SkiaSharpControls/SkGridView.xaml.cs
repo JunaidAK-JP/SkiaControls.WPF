@@ -1,15 +1,20 @@
 ﻿using SkiaSharp;
+using SkiaSharpControls.Enum;
 using SkiaSharpControls.Models;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Data.Common;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+
 
 namespace SkiaSharpControls
 {
@@ -39,11 +44,25 @@ namespace SkiaSharpControls
 
                 UpdateValues();
                 SkiaCanvas.Focus();
+                DataListView.AddHandler(
+                        DataGridColumnHeader.PreviewMouseDoubleClickEvent,
+                        new MouseButtonEventHandler((sender, e) =>
+                        {
+                            if (e.OriginalSource is FrameworkElement element &&
+                                element.TemplatedParent is System.Windows.Controls.Primitives.Thumb)
+                            {
+                                e.Handled = true; // Cancel default resizing
+                            }
+                        }),
+                        true);
+
             };
         }
 
+
         private bool IsBusy { get; set; }
         private SkGridRenderer renderer = new();
+        private int lastSelectedRowIndex = 0;
 
         public Action<object> OnRowClicked
         {
@@ -55,6 +74,35 @@ namespace SkiaSharpControls
         public static readonly DependencyProperty OnRowClickedProperty =
             DependencyProperty.Register(nameof(OnRowClicked), typeof(Action<object>), typeof(SkGridView), new PropertyMetadata(default));
 
+        public Action<string, SkGridViewColumnSort> SortDirectionChanged
+        {
+            get { return (Action<string, SkGridViewColumnSort>)GetValue(SortDirectionChangedProperty); }
+            set { SetValue(SortDirectionChangedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SortDirectionChangedProperty =
+            DependencyProperty.Register(nameof(SortDirectionChanged), typeof(Action<string, SkGridViewColumnSort>), typeof(SkGridView), new PropertyMetadata(default));
+
+        public Action<SkGridViewColumn> ColumnRightClick
+        {
+            get { return (Action<SkGridViewColumn>)GetValue(ColumnRightClickProperty); }
+            set { SetValue(ColumnRightClickProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ColumnRightClickProperty =
+            DependencyProperty.Register(nameof(ColumnRightClick), typeof(Action<SkGridViewColumn>), typeof(SkGridView), new PropertyMetadata(default));
+
+        public Action<SkGridViewColumn> ColumnLeftClick
+        {
+            get { return (Action<SkGridViewColumn>)GetValue(ColumnLeftClickProperty); }
+            set { SetValue(ColumnLeftClickProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ColumnLeftClickProperty =
+            DependencyProperty.Register(nameof(ColumnLeftClick), typeof(Action<SkGridViewColumn>), typeof(SkGridView), new PropertyMetadata(default));
 
 
         public Action<double> HorizontalScrollBarPositionChanged
@@ -188,6 +236,7 @@ namespace SkiaSharpControls
             }
         }
 
+
         public bool VerticalScrollBarVisible
         {
             get { return (bool)GetValue(VerticalScrollBarVisibleProperty); }
@@ -209,6 +258,74 @@ namespace SkiaSharpControls
                 skGridView.VerticalScrollViewer.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
             }
         }
+
+
+        public bool CanUserReorderColumns
+        {
+            get { return (bool)GetValue(CanUserReorderColumnsProperty); }
+            set { SetValue(CanUserReorderColumnsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for HorizontalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CanUserReorderColumnsProperty =
+            DependencyProperty.Register(
+                nameof(CanUserReorderColumns),
+                typeof(bool),
+                typeof(SkGridView),
+                new PropertyMetadata(true, CanUserReorderColumnsChanged));
+
+        private static void CanUserReorderColumnsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                skGridView.DataListView.CanUserReorderColumns = (bool)e.NewValue;
+            }
+        }
+
+        public bool CanUserResizeColumns
+        {
+            get { return (bool)GetValue(CanUserResizeColumnsProperty); }
+            set { SetValue(CanUserResizeColumnsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for HorizontalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CanUserResizeColumnsProperty =
+            DependencyProperty.Register(
+                nameof(CanUserResizeColumns),
+                typeof(bool),
+                typeof(SkGridView),
+                new PropertyMetadata(true, CanUserResizeColumnsChanged));
+
+        private static void CanUserResizeColumnsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                skGridView.DataListView.CanUserResizeColumns = (bool)e.NewValue;
+            }
+        }
+
+        public bool CanUserSortColumns
+        {
+            get { return (bool)GetValue(CanUserSortColumnsProperty); }
+            set { SetValue(CanUserSortColumnsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for HorizontalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CanUserSortColumnsProperty =
+            DependencyProperty.Register(
+                nameof(CanUserSortColumns),
+                typeof(bool),
+                typeof(SkGridView),
+                new PropertyMetadata(true, CanUserSortColumnsChanged));
+
+        private static void CanUserSortColumnsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                skGridView.DataListView.CanUserSortColumns = (bool)e.NewValue;
+            }
+        }
+
 
         public ContextMenu ContextMenu
         {
@@ -261,43 +378,91 @@ namespace SkiaSharpControls
             if (d is SkGridView skGridView && e.NewValue is IEnumerable<SkGridViewColumn> columns)
             {
                 skGridView.IsBusy = true;
-                skGridView.GV.Columns.CollectionChanged -= skGridView.OnColumnsReordered;
-                skGridView.GV.Columns.Clear();
+                //skGridView.DataListView.ColumnReordered -= skGridView.DataListView_ColumnReordered;
+                skGridView.DataListView.Columns.Clear();
 
                 foreach (var column in columns)
                 {
-                    skGridView.GV.Columns.Add(new GridViewColumn() { Header = column.Header, Width = column.Width });
+                    var headerStyle = new Style(typeof(DataGridColumnHeader));
+                    headerStyle.Setters.Add(new Setter(HorizontalContentAlignmentProperty, column.ContentAlignment == Enum.CellContentAlignment.Right ? HorizontalAlignment.Right :
+                                                                                         column.ContentAlignment == Enum.CellContentAlignment.Left ? HorizontalAlignment.Left : HorizontalAlignment.Center));
+
+                    //headerStyle.Setters.Add(new Setter(BackgroundProperty, GetColorBrush(column.BackColor ?? "#FF3F3F3F")));
+                    //headerStyle.Setters.Add(new Setter(ForegroundProperty, GetColorBrush("#FFFFFF")));
+                    //headerStyle.Setters.Add(new Setter(BorderThicknessProperty, new Thickness(0.5)));
+                    //headerStyle.Setters.Add(new Setter(BorderBrushProperty, GetColorBrush("#FFFFFF")));
+                    //headerStyle.Setters.Add(new Setter(PaddingProperty, new Thickness(5, 3, 5, 3)));
+
+
+
+                    var dgColumn = new DataGridTextColumn
+                    {
+                        Header = column.DisplayHeader ?? column.Header,
+                        Width = column.Width,
+                        Visibility = !column.IsVisible ? Visibility.Collapsed : Visibility.Visible,
+                        //HeaderStyle = headerStyle,
+                        MinWidth = 30,
+                    };
+                    if (column.CanUserResize.HasValue)
+                        dgColumn.CanUserResize = column.CanUserResize.Value;
+                    if (column.CanUserReorder.HasValue)
+                        dgColumn.CanUserReorder = column.CanUserReorder.Value;
+                    if (column.CanUserSort.HasValue)
+                        dgColumn.CanUserSort = column.CanUserSort.Value;
+                    skGridView.DataListView.Columns.Add(dgColumn);
                 }
 
                 skGridView.renderer.SetColumns(columns);
                 skGridView.IsBusy = false;
                 skGridView.SkiaCanvas.InvalidateVisual();
                 skGridView.ColumnsChanged?.Invoke();
-                skGridView.GV.Columns.CollectionChanged += skGridView.OnColumnsReordered;
+                skGridView.MonitorColumnResize(skGridView.DataListView);
+                //skGridView.DataListView.ColumnReordered += skGridView.DataListView_ColumnReordered;
+
+                //skGridView.GV.Columns.CollectionChanged -= skGridView.OnColumnsReordered;
+                //skGridView.GV.Columns.Clear();
+
+                //foreach (var column in columns)
+                //{
+                //    skGridView.GV.Columns.Add(new GridViewColumn() { Header = column.Header, Width = column.Width });
+                //}
+
+                //skGridView.renderer.SetColumns(columns);
+                //skGridView.IsBusy = false;
+                //skGridView.SkiaCanvas.InvalidateVisual();
+                //skGridView.ColumnsChanged?.Invoke();
+                //skGridView.GV.Columns.CollectionChanged += skGridView.OnColumnsReordered;
             }
         }
 
-        private void OnColumnsReordered(object? sender, NotifyCollectionChangedEventArgs e)
+        private static SolidColorBrush GetColorBrush(string Color)
         {
-            if (sender is ICollection<GridViewColumn> items)
-            {
-                IEnumerable<SkGridViewColumn> columns = [];
-
-                foreach (var item in items)
-                {
-                    var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
-
-                    columns = columns.Append(new SkGridViewColumn()
-                    {
-                        Header = existingItem?.Header ?? "",
-                        Width = existingItem?.Width ?? 100,
-                    });
-                }
-
-                Columns = columns;
-                renderer.SetColumns(columns);
-            }
+            string bgcolorString = Color;
+            var bgcolor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(bgcolorString);
+            return new SolidColorBrush(bgcolor);
         }
+
+        //private void OnColumnsReordered(object? sender, NotifyCollectionChangedEventArgs e)
+        //{
+        //    if (sender is ICollection<GridViewColumn> items)
+        //    {
+        //        IEnumerable<SkGridViewColumn> columns = [];
+
+        //        foreach (var item in items)
+        //        {
+        //            var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
+
+        //            columns = columns.Append(new SkGridViewColumn()
+        //            {
+        //                Header = existingItem?.Header ?? "",
+        //                Width = existingItem?.Width ?? 100,
+        //            });
+        //        }
+
+        //        Columns = columns;
+        //        renderer.SetColumns(columns);
+        //    }
+        //}
 
         public Action ColumnsChanged
         {
@@ -338,6 +503,7 @@ namespace SkiaSharpControls
                         skGridView.TotalRows = 0;
                         skGridView.VerticalScrollViewer.Maximum = 0;
                     }
+                    skGridView.lastSelectedRowIndex = 0;
                 }
                 skGridView?.UpdateValues();
             }
@@ -355,7 +521,7 @@ namespace SkiaSharpControls
 
         private double GetSkiaWidth()
         {
-            var totalcolumnwidth = GV.Columns.Where(x => x.Width > 0).Sum(x => x.Width);
+            var totalcolumnwidth = DataListView.Columns.Where(x => x.Visibility == Visibility.Visible).Sum(x => x.Width.Value);
             if (MainGrid.ActualWidth > totalcolumnwidth)
             {
                 return totalcolumnwidth;
@@ -542,8 +708,15 @@ namespace SkiaSharpControls
         {
             renderer.UpdateItems(ItemsSource);
             renderer.UpdateSelectedItems(SelectedItems);
+            try
+            {
+                renderer.Draw(canvas, ScrollOffsetX, ScrollOffsetY, RowHeight, TotalRows);
+            }
+            catch (Exception ex)
+            {
 
-            renderer.Draw(canvas, ScrollOffsetX, ScrollOffsetY, RowHeight, TotalRows);
+            }
+
         }
 
         private void SetScale(SKCanvas canvas)
@@ -584,9 +757,9 @@ namespace SkiaSharpControls
             if (rowIndex > s.Count - 1)
                 return;
 
-            foreach (var item in GV.Columns)
+            foreach (var item in DataListView.Columns.Where(x => x.Visibility == Visibility.Visible))
             {
-                x -= item.Width;
+                x -= item.Width.Value;
                 if (x <= 0)
                 {
                     OnCellClicked?.Invoke(s[rowIndex], item.Header?.ToString());
@@ -598,16 +771,46 @@ namespace SkiaSharpControls
                 if (SelectedItems.Any(x => x.Equals(s[rowIndex])))
                 {
                     SelectedItems.Remove(s[rowIndex]);
+
                 }
                 else
                 {
                     SelectedItems.Add(s[rowIndex]);
+                    lastSelectedRowIndex = rowIndex;
                 }
+            }
+            else if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)))
+            {
+                if (SelectedItems != null && SelectedItems.Count > 0)
+                {
+                    var seletedRow = lastSelectedRowIndex;
+
+                    var lastIndex = s.IndexOf(s[rowIndex]);
+
+                    if (lastIndex < seletedRow)
+                    {
+                        SelectedItems.Clear();
+                        for (int i = lastIndex; i <= seletedRow; i++)
+                        {
+                            SelectedItems.Add(s[i]);
+                        }
+                    }
+                    else
+                    {
+                        SelectedItems.Clear();
+                        for (int i = seletedRow; i < lastIndex; i++)
+                        {
+                            SelectedItems.Add(s[i]);
+                        }
+                    }
+                }
+
             }
             else if (e.LeftButton == MouseButtonState.Pressed)
             {
                 SelectedItems.Clear();
                 SelectedItems.Add(s[rowIndex]);
+                lastSelectedRowIndex = rowIndex;
                 OnRowClicked?.Invoke(s[rowIndex]);
             }
             if (e.ClickCount == 2)
@@ -632,9 +835,9 @@ namespace SkiaSharpControls
 
 
 
-            foreach (var item in GV.Columns)
+            foreach (var item in DataListView.Columns.Where(x => x.Visibility == Visibility.Visible))
             {
-                x -= item.Width;
+                x -= item.Width.Value;
                 if (x <= 0)
                 {
                     OnCellClicked?.Invoke(s[rowIndex], item.Header?.ToString());
@@ -648,35 +851,35 @@ namespace SkiaSharpControls
             RemoveWpfElements();
             SkiaCanvas.Focus();
         }
-        private void OnDragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
-        {
-            RemoveWpfElements();
-            IsBusy = true;
-        }
+        //private void OnDragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        //{
+        //    RemoveWpfElements();
+        //    IsBusy = true;
+        //}
 
-        private void OnDragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
-        {
-            IsBusy = false;
+        //private void OnDragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        //{
+        //    IsBusy = false;
 
-            if (GV.Columns is ICollection<GridViewColumn> items)
-            {
-                IEnumerable<SkGridViewColumn> columns = [];
+        //    if (GV.Columns is ICollection<GridViewColumn> items)
+        //    {
+        //        IEnumerable<SkGridViewColumn> columns = [];
 
-                foreach (var item in items)
-                {
-                    var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
+        //        foreach (var item in items)
+        //        {
+        //            var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
 
-                    columns = columns.Append(new SkGridViewColumn()
-                    {
-                        Header = existingItem?.Header ?? "",
-                        Width = item.Width,
-                    });
-                }
+        //            columns = columns.Append(new SkGridViewColumn()
+        //            {
+        //                Header = existingItem?.Header ?? "",
+        //                Width = item.Width,
+        //            });
+        //        }
 
-                Columns = columns;
-            }
-            UpdateValues();
-        }
+        //        Columns = columns;
+        //    }
+        //    UpdateValues();
+        //}
 
         public void Refresh()
         {
@@ -710,22 +913,35 @@ namespace SkiaSharpControls
             HorizontalScrollBarPositionChanged?.Invoke(e.NewValue);
             SkiaCanvas.InvalidateVisual();
         }
-        private void AddColumnWidthChangedHandler(System.Windows.Controls.ListView listView)
+        //private void AddColumnWidthChangedHandler(System.Windows.Controls.ListView listView)
+        //{
+        //    if (listView.View is GridView gridView)
+        //    {
+        //        foreach (var column in gridView.Columns)
+        //        {
+        //            DependencyPropertyDescriptor.FromProperty(GridViewColumn.WidthProperty, typeof(GridViewColumn))
+        //                .AddValueChanged(column, OnColumnWidthChanged);
+        //        }
+        //    }
+        //}
+        private void MonitorColumnResize(DataGrid dataGrid)
         {
-            if (listView.View is GridView gridView)
+            foreach (var column in dataGrid.Columns)
             {
-                foreach (var column in gridView.Columns)
-                {
-                    DependencyPropertyDescriptor.FromProperty(GridViewColumn.WidthProperty, typeof(GridViewColumn))
-                        .AddValueChanged(column, OnColumnWidthChanged);
-                }
+                var descriptor = DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty, typeof(DataGridColumn));
+                descriptor?.AddValueChanged(column, OnColumnWidthChanged);
             }
         }
-
         private void OnColumnWidthChanged(object sender, EventArgs e)
         {
-            UpdateValues();
-            SkiaCanvas.InvalidateVisual();
+            IsBusy = false;
+            if (sender is DataGridTextColumn column)
+            {
+
+                Columns.FirstOrDefault(x => x.Header == column?.Header.ToString() || x.DisplayHeader == column?.Header.ToString()).Width = column.ActualWidth;
+                UpdateValues();
+                SkiaCanvas.InvalidateVisual();
+            }
         }
 
         private static ScrollViewer FindScrollViewer(DependencyObject parent)
@@ -747,14 +963,14 @@ namespace SkiaSharpControls
         {
             SkiaCanvas.Height = GetSkiaHeight(TotalRows);
             SkiaCanvas.Width = GetSkiaWidth();
-            var TotalColsVisible = GV.Columns.Where(x => x.Width > 0).Select(x => x.Width);
+            var TotalColsVisible = DataListView.Columns.Where(x => x.Visibility == Visibility.Visible).Select(x => x.Width.Value);
             ColWidth = (float)(TotalColsVisible.Sum() / (TotalColsVisible.Count() - 1));
 
             TotalCols = 0;
 
             HorizontalScrollViewer.Minimum = 0;
             HorizontalScrollViewer.ViewportSize = MainGrid.ActualWidth;
-            HorizontalScrollViewer.Maximum = TotalColsVisible.Sum() - MainGrid.ActualWidth + 10;
+            HorizontalScrollViewer.Maximum = (TotalColsVisible.Sum() + 10) - MainGrid.ActualWidth + 10;
 
             VerticalScrollViewer.Minimum = 0;
             VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
@@ -802,14 +1018,156 @@ namespace SkiaSharpControls
             HorizontalScrollViewer.Value = offset;
         }
 
+        // Declare this to track where the selection started
+        private int? _selectionAnchorIndex = null;
+
         private void SkiaCanvas_KeyDown(object sender, KeyEventArgs e)
         {
-            OnPreviewKeyDownEvent.Invoke(e.Key);
+            if (ItemsSource is not IEnumerable<dynamic> sourceEnumerable)
+                return;
+
+            var items = new List<dynamic>(sourceEnumerable);
+            if (items.Count == 0)
+                return;
+
+            bool isShift = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+            if (SelectedItems == null || SelectedItems.Count == 0)
+            {
+                return;
+            }
+            if (SelectedItems.Count == 1)
+            {
+                _selectionAnchorIndex = lastSelectedRowIndex;
+            }
+
+            int currentIndex = items.IndexOf(SelectedItems.Last());
+
+            if (!isShift)
+                _selectionAnchorIndex = null;
+
+            int firstVisibleRow = Math.Max(0, (int)(ScrollOffsetY / RowHeight));
+            int visibleRowCount = Math.Min((int?)(VerticalScrollViewer?.ViewportSize / RowHeight - 3) ?? 0, TotalRows - firstVisibleRow);
+            // Shift + Up
+            if (isShift && e.Key == Key.Up)
+            {
+                if (currentIndex == 0)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+
+                if (_selectionAnchorIndex == null)
+                    _selectionAnchorIndex = currentIndex;
+
+                if (currentIndex > 0)
+                {
+                    var newIndex = currentIndex - 1;
+                    var newItem = items[newIndex];
+
+                    if (newIndex < _selectionAnchorIndex)
+                        SelectedItems.Add(newItem);
+                    else
+                        SelectedItems.Remove(items[currentIndex]);
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex <= firstVisibleRow)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY - RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+            // Shift + Down
+            else if (isShift && e.Key == Key.Down)
+            {
+                if (currentIndex == items.Count - 1)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+                if (_selectionAnchorIndex == null)
+                    _selectionAnchorIndex = currentIndex;
+
+                if (currentIndex < items.Count - 1)
+                {
+                    var newIndex = currentIndex + 1;
+                    var newItem = items[newIndex];
+
+                    if (newIndex > _selectionAnchorIndex)
+                        SelectedItems.Add(newItem);
+                    else
+                        SelectedItems.Remove(items[currentIndex]);
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex >= firstVisibleRow + visibleRowCount)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY + RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+            // Normal Up (no shift) – move single selection
+            else if (e.Key == Key.Up)
+            {
+                if (currentIndex == 0)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+                if (currentIndex > 0)
+                {
+                    SelectedItems.Clear();
+                    SelectedItems.Add(items[currentIndex - 1]);
+                    _selectionAnchorIndex = currentIndex - 1;
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex <= firstVisibleRow)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY - RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+            // Normal Down (no shift)
+            else if (e.Key == Key.Down)
+            {
+                if (currentIndex == items.Count - 1)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+                if (currentIndex < items.Count - 1)
+                {
+                    SelectedItems.Clear();
+                    SelectedItems.Add(items[currentIndex + 1]);
+                    _selectionAnchorIndex = currentIndex + 1;
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex >= firstVisibleRow + visibleRowCount)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY + RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+
+
+            OnPreviewKeyDownEvent?.Invoke(e.Key);
         }
+
 
         private void SkiaCanvas_LostFocus(object sender, RoutedEventArgs e)
         {
-            if(SelectedItems.Count > 0)
+            if (SelectedItems.Count > 0)
             {
                 SelectedItems?.Clear();
                 SkiaCanvas.InvalidateVisual();
@@ -832,6 +1190,131 @@ namespace SkiaSharpControls
             }
         }
 
+        private void DataListView_ColumnReordered(object sender, DataGridColumnEventArgs e)
+        {
+            if (sender is DataGrid items)
+            {
+                var columns = new List<SkGridViewColumn>();
+
+                foreach (var item in items.Columns.OrderBy(c => c.DisplayIndex))
+                {
+                    var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString() || x.DisplayHeader == item.Header?.ToString());
+
+                    columns.Add(new SkGridViewColumn
+                    {
+                        Header = existingItem?.Header ?? item.Header?.ToString() ?? "",
+                        Width = item.Width.DisplayValue,
+                        DisplayHeader = existingItem?.DisplayHeader,
+                        BackColor = existingItem?.BackColor,
+                        GridViewColumnSort = existingItem.GridViewColumnSort,
+                        ContentAlignment = existingItem.ContentAlignment,
+                        IsVisible = existingItem.IsVisible
+                    });
+                }
+
+                Columns = columns;
+                renderer.SetColumns(columns);
+            }
+        }
+
+        private void DataListView_ColumnHeaderDragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            //IsBusy = true;
+        }
+
+        private void DataListView_ColumnHeaderDragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+
+
+            //IsBusy = false;
+
+            //if (sender is ICollection<DataGridColumn> items)
+            //{
+            //    IEnumerable<SkGridViewColumn> columns = [];
+
+            //    foreach (var item in items)
+            //    {
+            //        var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString());
+
+            //        columns = columns.Append(new SkGridViewColumn()
+            //        {
+            //            Header = existingItem?.Header ?? "",
+            //            Width = item.Width.Value,
+            //        });
+            //    }
+
+            //    Columns = columns;
+            //}
+            //UpdateValues();
+        }
+
+        private void DataListView_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            e.Handled = false;
+
+            var column = e.Column;
+            var direction = column.SortDirection != ListSortDirection.Ascending
+                ? SkGridViewColumnSort.Ascending
+                : SkGridViewColumnSort.Descending;
+
+            column.SortDirection = column.SortDirection != ListSortDirection.Ascending
+                ? ListSortDirection.Ascending
+                : ListSortDirection.Descending;
+
+            foreach (var item in Columns)
+            {
+                item.GridViewColumnSort = SkGridViewColumnSort.None;
+            }
+            var col = Columns.FirstOrDefault(x => x.Header == column?.Header.ToString() || x.DisplayHeader == column?.Header.ToString());
+            col.GridViewColumnSort = direction;
+            SortDirectionChanged?.Invoke(col.Header, direction);
+        }
+
+        private void DataListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            var headers = FindVisualChildren<DataGridColumnHeader>(DataListView);
+            foreach (var header in headers)
+            {
+                header.AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_LeftClick), true);
+                header.AddHandler(MouseRightButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_RightClick), true);
+            }
+        }
+        private void ColumnHeader_LeftClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is DataGridColumnHeader header)
+            {
+                var col = Columns?.FirstOrDefault(x => x.Header == header.Column?.Header.ToString() || x.DisplayHeader == header.Column?.Header.ToString());
+                ColumnLeftClick?.Invoke(col!);
+            }
+        }
+
+        private void ColumnHeader_RightClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is DataGridColumnHeader header)
+            {
+                var col = Columns.FirstOrDefault(x => x.Header == header.Column?.Header.ToString() || x.DisplayHeader == header.Column?.Header.ToString());
+                ColumnRightClick?.Invoke(col!);
+            }
+        }
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child != null && child is T t)
+                    {
+                        yield return t;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
+            }
+        }
         public void ScrollToVerticalOffset(double offset)
         {
             VerticalScrollViewer.Value = offset;

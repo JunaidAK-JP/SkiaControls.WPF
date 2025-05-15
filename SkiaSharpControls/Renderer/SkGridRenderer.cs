@@ -70,6 +70,7 @@ namespace SkiaSharpControls
 
         public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, float rowHeight, int totalRows)
         {
+
             int firstVisibleRow = Math.Max(0, (int)(scrollOffsetY / rowHeight));
 
             int firstVisibleCol = 0;
@@ -114,9 +115,9 @@ namespace SkiaSharpControls
                 float currentX = 0;
                 float currentX1 = 0;
 
-                var columnList = Columns as IList<SkGridViewColumn> ?? Columns.ToList();
+                var columnList = Columns as IList<SkGridViewColumn> ?? Columns?.ToList();
 
-                for (int i = 0; i < firstVisibleCol && i < columnList.Count; i++)
+                for (int i = 0; i < firstVisibleCol && i < columnList?.Count; i++)
                 {
                     currentX += (float)columnList[i].Width;
 
@@ -135,9 +136,6 @@ namespace SkiaSharpControls
 
                     fontPaint.IsAntialias = true;
                     lineColor.IsAntialias = true;
-
-
-
 
                     SKColor bgColor = template?.RendererProperties?.BackgroundBrush?.Color ?? SKColors.Transparent;//?? RowBackgroundSelector?.Invoke(item) ?? SKColors.AliceBlue;
 
@@ -175,9 +173,9 @@ namespace SkiaSharpControls
 
             if (Columns == null) return;
 
-            foreach (var col in Columns)
+            foreach (var col in Columns.ToList())
             {
-                if (col.Width > 0)
+                if (col.IsVisible)
                     _visibleColumnsCache.Add(col);
             }
         }
@@ -206,7 +204,7 @@ namespace SkiaSharpControls
             canvas.DrawLine(x, y + rowHeight-0.5f, x + width, y + rowHeight-0.5f, borderColor);//bottom
             canvas.DrawLine(x, y+0.5f, x + width, y+0.5f, borderColor); // top
         }
-       
+
 
         //private static void DrawBorder(SKCanvas canvas, SKPaint borderPaint, float width, float x, float y, float rowHeight)
         //{
@@ -247,6 +245,50 @@ namespace SkiaSharpControls
 
 
 
+        //private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontColor, SKFont textFont, float width, float x, float y, CellContentAlignment cellContentAlignment)
+        //{
+        //    if (width < 10 || string.IsNullOrEmpty(value))
+        //        return;
+
+        //    float maxTextWidth = width - 10;
+        //    ReadOnlySpan<char> span = value;
+
+        //    // Binary search trimming instead of one-by-one
+        //    int left = 0;
+        //    int right = span.Length;
+        //    int fitLength = span.Length;
+
+        //    while (left <= right)
+        //    {
+        //        int mid = (left + right) / 2;
+        //        var testSpan = span.Slice(0, mid);
+        //        float testWidth = textFont.MeasureText(testSpan, out _);
+
+        //        if (testWidth <= maxTextWidth)
+        //        {
+        //            fitLength = mid; // update only if it fits
+        //            left = mid + 1;
+        //        }
+        //        else
+        //        {
+        //            right = mid - 1;
+        //        }
+        //    }
+
+
+        //    var finalText = span.Slice(0, fitLength).ToString(); // final trimmed string
+        //    float finalWidth = textFont.MeasureText(finalText, out _);
+
+        //    float textX = x + 5;
+        //    if (cellContentAlignment == CellContentAlignment.Right)
+        //        textX = x + width - finalWidth - 5;
+        //    else if (cellContentAlignment == CellContentAlignment.Center)
+        //        textX = x + (width - finalWidth) / 2;
+
+        //    // You may want to adjust `y + 12` if font size varies
+        //    canvas.DrawText(finalText, textX, y + 12, textFont, fontColor);
+        //}
+
         private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontColor, SKFont textFont, float width, float x, float y, CellContentAlignment cellContentAlignment)
         {
             if (width < 10 || string.IsNullOrEmpty(value))
@@ -254,8 +296,9 @@ namespace SkiaSharpControls
 
             float maxTextWidth = width - 10;
             ReadOnlySpan<char> span = value;
+            ReadOnlySpan<char> ellipsis = "...";
+            float ellipsisWidth = textFont.MeasureText(ellipsis, out _);
 
-            // Binary search trimming instead of one-by-one
             int left = 0;
             int right = span.Length;
             int fitLength = span.Length;
@@ -266,9 +309,9 @@ namespace SkiaSharpControls
                 var testSpan = span.Slice(0, mid);
                 float testWidth = textFont.MeasureText(testSpan, out _);
 
-                if (testWidth <= maxTextWidth)
+                if (testWidth + (mid < span.Length ? ellipsisWidth : 0) <= maxTextWidth)
                 {
-                    fitLength = mid; // update only if it fits
+                    fitLength = mid;
                     left = mid + 1;
                 }
                 else
@@ -277,8 +320,11 @@ namespace SkiaSharpControls
                 }
             }
 
+            string finalText = span.Slice(0, fitLength).ToString();
+            bool wasTrimmed = fitLength < span.Length;
+            if (wasTrimmed)
+                finalText += "...";
 
-            var finalText = span.Slice(0, fitLength).ToString(); // final trimmed string
             float finalWidth = textFont.MeasureText(finalText, out _);
 
             float textX = x + 5;
@@ -287,9 +333,9 @@ namespace SkiaSharpControls
             else if (cellContentAlignment == CellContentAlignment.Center)
                 textX = x + (width - finalWidth) / 2;
 
-            // You may want to adjust `y + 12` if font size varies
             canvas.DrawText(finalText, textX, y + 12, textFont, fontColor);
         }
+
 
         //private void DrawRect(SKCanvas canvas, int rowIndex, float x, float y, SKPaint backColor, float width, float RowHeight)
         //{
