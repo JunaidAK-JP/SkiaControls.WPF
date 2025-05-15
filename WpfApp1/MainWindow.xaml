@@ -30,6 +30,7 @@
         <Button Grid.Column="1" Grid.Row="0" Height="30" Content="Toggle Resize" Click="ToggleResize"  />
         <Button Grid.Column="1" Grid.Row="1" Height="30" Content="Toggle Sort" Click="ToggleSort"  />
         <Button Grid.Column="1" Grid.Row="2" Height="30" Content="Toggle Reorder" Click="ToggleReorder"  />
+        <Button Grid.Column="1" Grid.Row="3" Height="30" Content="Change Font" Click="ChangeFont"  />
 
         <skia:SkGridView 
             x:Name="skiaGrid" Grid.Row="5"
@@ -55,6 +56,8 @@
             SortDirectionChanged="{Binding SortDirectionChanged}"
             ColumnLeftClick="{Binding LeftClick}"
             ColumnRightClick="{Binding RightClick}"
+            CanUserSelectRows="True"
+            
             />
     </Grid>
 </Window>

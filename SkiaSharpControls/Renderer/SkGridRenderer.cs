@@ -9,7 +9,7 @@ namespace SkiaSharpControls
 {
     internal class SkGridRenderer : ISkGridRenderer
     {
-        private readonly SKFont SymbolFont = new() { Size = 12, Typeface = SKTypeface.FromFile("TypeFaces\\seguisym.ttf") };
+        private SKFont SymbolFont { get; set; } = new() { Size = 12, Typeface = SKTypeface.FromFile("TypeFaces\\seguisym.ttf") };
         private IEnumerable? Items { get; set; }
         private IEnumerable? SelectedItems { get; set; }
         private IEnumerable<SkGridViewColumn>? Columns { get; set; } = [];
@@ -68,9 +68,9 @@ namespace SkiaSharpControls
             ShowGridLines = showGridLines;
         }
 
-        public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, float rowHeight, int totalRows)
+        public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, SKFont? font,float rowHeight, int totalRows)
         {
-
+            
             int firstVisibleRow = Math.Max(0, (int)(scrollOffsetY / rowHeight));
 
             int firstVisibleCol = 0;
@@ -130,7 +130,7 @@ namespace SkiaSharpControls
                     var template = CellTemplateSelector?.Invoke(item, visibleColumns.ElementAt(colIndex).Header);
                     string value = template?.CellContent ?? "";
                     var fontPaint = template?.RendererProperties?.TextForeground ?? DefaultTextForegroundPaint;
-                    var textFont = template?.RendererProperties?.TextFont ?? SymbolFont;
+                    var textFont = font ?? SymbolFont;
                     var lineColor = template?.RendererProperties?.LineBackground ?? DefaultLinePaint;
                     var cellContentAlignment = template?.CellContentAlignment ?? CellContentAlignment.Left;
 
@@ -150,8 +150,8 @@ namespace SkiaSharpControls
                     }
                     if (ShowGridLines)
                     {
-                        canvas.DrawLine(currentX + GVColumnWidth, currentY, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
-                        canvas.DrawLine(currentX, currentY + rowHeight, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
+                        canvas?.DrawLine(currentX + GVColumnWidth, currentY, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
+                        canvas?.DrawLine(currentX, currentY + rowHeight, currentX + GVColumnWidth, currentY + rowHeight, lineColor);
                     }
                     currentX += GVColumnWidth;
                 }
@@ -199,10 +199,10 @@ namespace SkiaSharpControls
 
         private static void DrawBorder(SKCanvas canvas, SKPaint? borderColor, float width, float x, float y, float rowHeight)
         {
-            canvas.DrawLine(x, y, x, y + rowHeight, borderColor);
-            canvas.DrawLine(x + width, y, x + width, y + rowHeight, borderColor);
-            canvas.DrawLine(x, y + rowHeight-0.5f, x + width, y + rowHeight-0.5f, borderColor);//bottom
-            canvas.DrawLine(x, y+0.5f, x + width, y+0.5f, borderColor); // top
+            canvas.DrawLine(x + 1f, y, x + 1f, y + rowHeight, borderColor);
+            canvas.DrawLine(x + width - 1f, y, x + width - 1f, y + rowHeight, borderColor);
+            canvas.DrawLine(x, y + rowHeight - 2f, x + width, y + rowHeight - 2f, borderColor);//bottom
+            canvas.DrawLine(x, y + 0.5f, x + width, y + 0.5f, borderColor); // top
         }
 
 
@@ -333,7 +333,7 @@ namespace SkiaSharpControls
             else if (cellContentAlignment == CellContentAlignment.Center)
                 textX = x + (width - finalWidth) / 2;
 
-            canvas.DrawText(finalText, textX, y + 12, textFont, fontColor);
+            canvas.DrawText(finalText, textX, y + textFont.Size , textFont, fontColor);
         }
 
 

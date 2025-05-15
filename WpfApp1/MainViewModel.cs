@@ -34,29 +34,29 @@ namespace WpfApp1
             new() { Id = 6, Name = "Alice 5", Age = 30 },
             new() { Id = 7, Name = "Alice 6", Age = 32345 },
 
-            new() { Id = 1, Name = "Alice", Age = 25 },
-            new() { Id = 2, Name = "Alice 1", Age = 226 },
-            new() { Id = 3, Name = "Alice 2", Age = 22347 },
-            new() { Id = 4, Name = "Alice 3", Age = 22348 },
-            new() { Id = 5, Name = "Alice 4", Age = 22349 },
-            new() { Id = 6, Name = "Alice 5", Age = 30 },
-            new() { Id = 7, Name = "Alice 6", Age = 35 },
+            new() { Id = 1, Name = "Alice 7", Age = 25 },
+            new() { Id = 2, Name = "Alice 8", Age = 226 },
+            new() { Id = 3, Name = "Alice 9", Age = 22347 },
+            new() { Id = 4, Name = "Alice 10", Age = 22348 },
+            new() { Id = 5, Name = "Alice 11", Age = 22349 },
+            new() { Id = 6, Name = "Alice 12", Age = 30 },
+            new() { Id = 7, Name = "Alice 13", Age = 35 },
 
-            new() { Id = 1, Name = "Alice", Age = 25 },
-            new() { Id = 2, Name = "Alice 1", Age = 26 },
-            new() { Id = 3, Name = "Alice 2", Age = 24227 },
-            new() { Id = 4, Name = "Alice 3", Age = 22348 },
-            new() { Id = 5, Name = "Alice 4", Age = 29 },
-            new() { Id = 6, Name = "Alice 5", Age = 30 },
-            new() { Id = 7, Name = "Alice 6", Age = 35 },
+            new() { Id = 1, Name = "Alice 14", Age = 25 },
+            new() { Id = 2, Name = "Alice 15", Age = 26 },
+            new() { Id = 3, Name = "Alice 16", Age = 24227 },
+            new() { Id = 4, Name = "Alice 17", Age = 22348 },
+            new() { Id = 5, Name = "Alice 18", Age = 29 },
+            new() { Id = 6, Name = "Alice 19", Age = 30 },
+            new() { Id = 7, Name = "Alice 20", Age = 35 },
 
-            new() { Id = 1, Name = "Alice", Age = 25 },
-            new() { Id = 2, Name = "Alice 1", Age = 26 },
-            new() { Id = 3, Name = "Alice 2", Age = 27 },
-            new() { Id = 4, Name = "Alice 3", Age = 28 },
-            new() { Id = 5, Name = "Alice 4", Age = 29 },
-            new() { Id = 6, Name = "Alice 5", Age = 30 },
-            new() { Id = 7, Name = "Alice 6", Age = 35 },
+            new() { Id = 1, Name = "Alice 21", Age = 25 },
+            new() { Id = 2, Name = "Alice 22", Age = 26 },
+            new() { Id = 3, Name = "Alice 23", Age = 27 },
+            new() { Id = 4, Name = "Alice 24", Age = 28 },
+            new() { Id = 5, Name = "Alice 25", Age = 29 },
+            new() { Id = 6, Name = "Alice 26", Age = 30 },
+            new() { Id = 7, Name = "Alice 27", Age = 35 },
 
         ];
 
@@ -80,7 +80,6 @@ namespace WpfApp1
             new SkGridViewColumn() { Header = "Id",CanUserResize=false,CanUserSort=false,CanUserReorder=false,ContentAlignment = CellContentAlignment.Right },
             new SkGridViewColumn() { Header = "Name", IsVisible=true },
             new SkGridViewColumn() { Header = "Trend" },
-            new SkGridViewColumn() { Header = "Trend2" },
             new SkGridViewColumn() { Header = "Trend2" },
             new SkGridViewColumn() { Header = "Age" },
             new SkGridViewColumn() { Header = "IsToggle" },
@@ -179,9 +178,9 @@ namespace WpfApp1
 
             return myObject?.Age switch
             {
-                28 => SKColors.Green,
-                29 => SKColors.Green,
-                30 => SKColors.Green,
+              
+                30 => SKColors.Red,
+                35 => SKColors.Green,
                 _ => SKColors.Transparent
             };
         };

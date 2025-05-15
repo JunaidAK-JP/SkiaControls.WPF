@@ -3,10 +3,7 @@ using SkiaSharpControls.Enum;
 using SkiaSharpControls.Models;
 using System.Collections;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Data.Common;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -55,6 +52,7 @@ namespace SkiaSharpControls
                             }
                         }),
                         true);
+                
 
             };
         }
@@ -63,7 +61,7 @@ namespace SkiaSharpControls
         private bool IsBusy { get; set; }
         private SkGridRenderer renderer = new();
         private int lastSelectedRowIndex = 0;
-
+        private float rowHeight = 12 + 4;
         public Action<object> OnRowClicked
         {
             get { return (Action<object>)GetValue(OnRowClickedProperty); }
@@ -259,6 +257,54 @@ namespace SkiaSharpControls
             }
         }
 
+        public bool CanUserSelectRows
+        {
+            get { return (bool)GetValue(CanUserSelectRowsProperty); }
+            set { SetValue(CanUserSelectRowsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for VerticalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CanUserSelectRowsProperty =
+            DependencyProperty.Register(
+                nameof(CanUserSelectRows),
+                typeof(bool),
+                typeof(SkGridView),
+                new PropertyMetadata(true, CanUserSelectRowsPropertyChanged));
+
+        private static void CanUserSelectRowsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                if (!(bool)e.NewValue)
+                    skGridView?.SelectedItems?.Clear();
+            }
+        }
+
+        public SKFont? Font
+        {
+            get { return (SKFont?)GetValue(FontProperty); }
+            set { SetValue(FontProperty, value); }
+        }
+
+        public static readonly DependencyProperty FontProperty =
+            DependencyProperty.Register(
+                nameof(Font),
+                typeof(SKFont),
+                typeof(SkGridView),
+                new PropertyMetadata(null, FontChanged));
+
+        private static void FontChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkGridView skGridView)
+            {
+                if (e.NewValue != null)
+                {
+                    skGridView.rowHeight = ((SKFont)e.NewValue).Size + 4;
+                    skGridView.DataListView.FontSize =  skGridView!.Font!.Size ;
+                    skGridView.SKGridColumnHeader.Height = new GridLength( skGridView!.Font!.Size + 10);
+                }
+            }
+        }
 
         public bool CanUserReorderColumns
         {
@@ -388,21 +434,19 @@ namespace SkiaSharpControls
                                                                                          column.ContentAlignment == Enum.CellContentAlignment.Left ? HorizontalAlignment.Left : HorizontalAlignment.Center));
 
                     //headerStyle.Setters.Add(new Setter(BackgroundProperty, GetColorBrush(column.BackColor ?? "#FF3F3F3F")));
-                    //headerStyle.Setters.Add(new Setter(ForegroundProperty, GetColorBrush("#FFFFFF")));
-                    //headerStyle.Setters.Add(new Setter(BorderThicknessProperty, new Thickness(0.5)));
-                    //headerStyle.Setters.Add(new Setter(BorderBrushProperty, GetColorBrush("#FFFFFF")));
-                    //headerStyle.Setters.Add(new Setter(PaddingProperty, new Thickness(5, 3, 5, 3)));
 
 
+                    headerStyle.BasedOn = skGridView.Resources["ColumnHeaderStyle"] as Style;
 
                     var dgColumn = new DataGridTextColumn
                     {
                         Header = column.DisplayHeader ?? column.Header,
                         Width = column.Width,
                         Visibility = !column.IsVisible ? Visibility.Collapsed : Visibility.Visible,
-                        //HeaderStyle = headerStyle,
+                        HeaderStyle = headerStyle,
                         MinWidth = 30,
                     };
+
                     if (column.CanUserResize.HasValue)
                         dgColumn.CanUserResize = column.CanUserResize.Value;
                     if (column.CanUserReorder.HasValue)
@@ -417,6 +461,10 @@ namespace SkiaSharpControls
                 skGridView.SkiaCanvas.InvalidateVisual();
                 skGridView.ColumnsChanged?.Invoke();
                 skGridView.MonitorColumnResize(skGridView.DataListView);
+                
+
+            
+                
                 //skGridView.DataListView.ColumnReordered += skGridView.DataListView_ColumnReordered;
 
                 //skGridView.GV.Columns.CollectionChanged -= skGridView.OnColumnsReordered;
@@ -511,11 +559,11 @@ namespace SkiaSharpControls
 
         private double GetSkiaHeight(int totalRows)
         {
-            if (MainGrid.ActualHeight < (totalRows * RowHeight))
+            if (MainGrid.ActualHeight < (totalRows * rowHeight))
             {
                 return MainGrid.ActualHeight;
             }
-            return (totalRows * RowHeight);
+            return (totalRows * rowHeight);
         }
 
 
@@ -625,7 +673,7 @@ namespace SkiaSharpControls
 
             if (VerticalScrollViewer.Track.Visibility != Visibility.Visible)
             {
-                element.Margin = new Thickness(0, 0, 0, -RowHeight);
+                element.Margin = new Thickness(0, 0, 0, -rowHeight);
             }
 
             if (!AddedWpfElements.TryAdd(element, (removeOnLostFocus, removeOnReturn)))
@@ -710,7 +758,7 @@ namespace SkiaSharpControls
             renderer.UpdateSelectedItems(SelectedItems);
             try
             {
-                renderer.Draw(canvas, ScrollOffsetX, ScrollOffsetY, RowHeight, TotalRows);
+                renderer.Draw(canvas, ScrollOffsetX, ScrollOffsetY, Font, rowHeight, TotalRows);
             }
             catch (Exception ex)
             {
@@ -745,7 +793,7 @@ namespace SkiaSharpControls
                 return;
             var point = e.GetPosition(SkiaCanvas);
 
-            int rowIndex = (int)((point.Y + ScrollOffsetY) / RowHeight);
+            int rowIndex = (int)((point.Y + ScrollOffsetY) / rowHeight);
             double x = point.X;
             int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
             var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
@@ -766,7 +814,7 @@ namespace SkiaSharpControls
                     break;
                 }
             }
-            if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
+            if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && CanUserSelectRows)
             {
                 if (SelectedItems.Any(x => x.Equals(s[rowIndex])))
                 {
@@ -779,7 +827,7 @@ namespace SkiaSharpControls
                     lastSelectedRowIndex = rowIndex;
                 }
             }
-            else if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)))
+            else if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) && CanUserSelectRows)
             {
                 if (SelectedItems != null && SelectedItems.Count > 0)
                 {
@@ -806,7 +854,7 @@ namespace SkiaSharpControls
                 }
 
             }
-            else if (e.LeftButton == MouseButtonState.Pressed)
+            else if (e.LeftButton == MouseButtonState.Pressed && CanUserSelectRows)
             {
                 SelectedItems.Clear();
                 SelectedItems.Add(s[rowIndex]);
@@ -825,7 +873,7 @@ namespace SkiaSharpControls
             // Get mouse position relative to SKElement
             var point = e.GetPosition(SkiaCanvas);
 
-            int rowIndex = (int)((point.Y + ScrollOffsetY) / RowHeight);
+            int rowIndex = (int)((point.Y + ScrollOffsetY) / rowHeight);
             double x = point.X;
             int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
 
@@ -893,7 +941,7 @@ namespace SkiaSharpControls
         private int TotalRows = 0;
         private int TotalCols = 61;
         private float ColWidth = 90;
-        private int RowHeight = 18;
+
         private ScrollViewer DataListViewScroll;
         private float DpiScalling = 0;
         private SKFont TextFont;
@@ -974,7 +1022,7 @@ namespace SkiaSharpControls
 
             VerticalScrollViewer.Minimum = 0;
             VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
-            VerticalScrollViewer.Maximum = ((TotalRows + 3.3) * RowHeight) - MainGrid.ActualHeight;
+            VerticalScrollViewer.Maximum = ((TotalRows + 3.3) * rowHeight) - MainGrid.ActualHeight;
 
             PresentationSource source = PresentationSource.FromVisual(this);
             if (source != null)
@@ -1030,12 +1078,13 @@ namespace SkiaSharpControls
             if (items.Count == 0)
                 return;
 
-            bool isShift = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
-
             if (SelectedItems == null || SelectedItems.Count == 0)
             {
                 return;
             }
+            bool isShift = (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift));
+
+
             if (SelectedItems.Count == 1)
             {
                 _selectionAnchorIndex = lastSelectedRowIndex;
@@ -1046,8 +1095,8 @@ namespace SkiaSharpControls
             if (!isShift)
                 _selectionAnchorIndex = null;
 
-            int firstVisibleRow = Math.Max(0, (int)(ScrollOffsetY / RowHeight));
-            int visibleRowCount = Math.Min((int?)(VerticalScrollViewer?.ViewportSize / RowHeight - 3) ?? 0, TotalRows - firstVisibleRow);
+            int firstVisibleRow = Math.Max(0, (int)(ScrollOffsetY / rowHeight));
+            int visibleRowCount = Math.Min((int?)(VerticalScrollViewer?.ViewportSize / rowHeight - 3) ?? 0, TotalRows - firstVisibleRow);
             // Shift + Up
             if (isShift && e.Key == Key.Up)
             {
@@ -1075,7 +1124,7 @@ namespace SkiaSharpControls
                     Keyboard.Focus(SkiaCanvas);
                     if (currentIndex <= firstVisibleRow)
                     {
-                        ScrollToVerticalOffset(ScrollOffsetY - RowHeight);
+                        ScrollToVerticalOffset(ScrollOffsetY - rowHeight);
                     }
                     SkiaCanvas.InvalidateVisual();
                 }
@@ -1106,7 +1155,7 @@ namespace SkiaSharpControls
                     Keyboard.Focus(SkiaCanvas);
                     if (currentIndex >= firstVisibleRow + visibleRowCount)
                     {
-                        ScrollToVerticalOffset(ScrollOffsetY + RowHeight);
+                        ScrollToVerticalOffset(ScrollOffsetY + rowHeight);
                     }
                     SkiaCanvas.InvalidateVisual();
                 }
@@ -1130,7 +1179,7 @@ namespace SkiaSharpControls
                     Keyboard.Focus(SkiaCanvas);
                     if (currentIndex <= firstVisibleRow)
                     {
-                        ScrollToVerticalOffset(ScrollOffsetY - RowHeight);
+                        ScrollToVerticalOffset(ScrollOffsetY - rowHeight);
                     }
                     SkiaCanvas.InvalidateVisual();
                 }
@@ -1154,7 +1203,7 @@ namespace SkiaSharpControls
                     Keyboard.Focus(SkiaCanvas);
                     if (currentIndex >= firstVisibleRow + visibleRowCount)
                     {
-                        ScrollToVerticalOffset(ScrollOffsetY + RowHeight);
+                        ScrollToVerticalOffset(ScrollOffsetY + rowHeight);
                     }
                     SkiaCanvas.InvalidateVisual();
                 }
@@ -1167,7 +1216,7 @@ namespace SkiaSharpControls
 
         private void SkiaCanvas_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (SelectedItems.Count > 0)
+            if (SelectedItems.Count > 0 && CanUserSelectRows)
             {
                 SelectedItems?.Clear();
                 SkiaCanvas.InvalidateVisual();
@@ -1178,7 +1227,7 @@ namespace SkiaSharpControls
         {
             if (e.OriginalSource is not SkiaSharp.Views.WPF.SKElement)
             {
-                if (SelectedItems.Count > 0 && !(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
+                if (SelectedItems.Count > 0 && !(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && CanUserSelectRows)
                 {
                     SelectedItems.Clear();
                     SkiaCanvas.InvalidateVisual();
@@ -1278,6 +1327,7 @@ namespace SkiaSharpControls
                 header.AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_LeftClick), true);
                 header.AddHandler(MouseRightButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_RightClick), true);
             }
+            
         }
         private void ColumnHeader_LeftClick(object sender, MouseButtonEventArgs e)
         {
