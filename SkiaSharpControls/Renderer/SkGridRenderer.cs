@@ -137,9 +137,6 @@ namespace SkiaSharpControls
                     fontPaint.IsAntialias = true;
                     lineColor.IsAntialias = true;
 
-
-
-
                     SKColor bgColor = template?.RendererProperties?.BackgroundBrush?.Color ?? SKColors.Transparent;//?? RowBackgroundSelector?.Invoke(item) ?? SKColors.AliceBlue;
 
                     using (var paint = new SKPaint { Color = bgColor, StrokeWidth = 1, IsAntialias = true })

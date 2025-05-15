@@ -133,6 +133,7 @@
             </ListView.View>
         </ListView>-->
         <DataGrid Grid.Row="0" 
+                  Grid.Column="0"
                   x:Name="DataListView"
                   ScrollViewer.HorizontalScrollBarVisibility="Hidden" 
                   ScrollViewer.VerticalScrollBarVisibility="Hidden" 
@@ -141,12 +142,13 @@
                   HorizontalAlignment="Left"                  
                   ColumnReordered="DataListView_ColumnReordered"
                   HeadersVisibility="Column"
+                  Loaded="DataListView_Loaded"
                   Sorting="DataListView_Sorting"
                   
                   >
         </DataGrid>
 
-        <StackPanel Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+        <StackPanel Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
             <skia:SKElement    
                 x:Name="SkiaCanvas" 
                 Focusable="True"

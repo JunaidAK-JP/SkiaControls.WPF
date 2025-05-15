@@ -53,6 +53,8 @@
             OnPreviewKeyDownEvent="{Binding OnPreviewKeyDownEvent}"
             OnSkGridDoubleClicked="{Binding OnSkGridDoubleClicked}"
             SortDirectionChanged="{Binding SortDirectionChanged}"
+            ColumnLeftClick="{Binding LeftClick}"
+            ColumnRightClick="{Binding RightClick}"
             />
     </Grid>
 </Window>

@@ -81,11 +81,18 @@ namespace WpfApp1
             new SkGridViewColumn() { Header = "Name", IsVisible=true },
             new SkGridViewColumn() { Header = "Trend" },
             new SkGridViewColumn() { Header = "Trend2" },
+            new SkGridViewColumn() { Header = "Trend2" },
             new SkGridViewColumn() { Header = "Age" },
             new SkGridViewColumn() { Header = "IsToggle" },
-            new SkGridViewColumn() { Header = "Highlighted" }
+            new SkGridViewColumn() { Header = "Highlighted",ContentAlignment = CellContentAlignment.Right }
         ];
 
+        public Action<SkGridViewColumn> RightClick => (SkGridViewColumn data) =>
+        {
+        };
+        public Action<SkGridViewColumn> LeftClick => (SkGridViewColumn data) =>
+        {
+        };
         public Action<object> RowClick => (object data) =>
         {
 
@@ -318,7 +325,7 @@ namespace WpfApp1
                             template.RendererProperties.BackgroundBrush = BackgroundBrushHighlighting;
                             template.CellContent = "hi11";
                             template.RendererProperties.BorderBrush = BorderBrushHighlighting;
-                            template.CellContentAlignment = SkiaSharpControls.Enum.CellContentAlignment.Center;
+                            template.CellContentAlignment = SkiaSharpControls.Enum.CellContentAlignment.Right;
                             break;
                     }
                 }
