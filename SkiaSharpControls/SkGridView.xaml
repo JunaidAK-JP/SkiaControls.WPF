@@ -64,7 +64,18 @@
             </Style.Triggers>
         </Style>-->
 
-
+        <Style TargetType="{x:Type Thumb}">
+            <Setter Property="Width" Value="2"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="{x:Type DataGrid}">
             <Setter Property="AutoGenerateColumns" Value="False" />
             <Setter Property="AlternationCount" Value="2" />
@@ -104,17 +115,18 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock x:Name="ContentHeader" Text="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" Width="{TemplateBinding Width}" TextAlignment="Left" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
-                                <Path x:Name="SortArrow" Grid.Column="1" Margin="0,0,5,0" Fill="White" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <!--<Path x:Name="SortArrow" Grid.Column="1" Margin="0,0,5,0" Fill="White" VerticalAlignment="Center" HorizontalAlignment="Center" />-->
+                                <TextBlock x:Name="SortArrow" Grid.Column="1"  Foreground="White" VerticalAlignment="Center" FontSize="{Binding ElementName=ContentHeader, Path=FontSize}" HorizontalAlignment="Center" />
                                 <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left"/>
-                                <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right"/>
+                                <Thumb Grid.Column="2" x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right"/>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="SortDirection" Value="Ascending">
-                                <Setter TargetName="SortArrow" Property="Data" Value="{StaticResource UpArrowGeometry}" />
+                                <Setter TargetName="SortArrow" Property="Text" Value="⏷"  />
                             </Trigger>
                             <Trigger Property="SortDirection" Value="Descending">
-                                <Setter TargetName="SortArrow" Property="Data" Value="{StaticResource DownArrowGeometry}" />
+                                <Setter TargetName="SortArrow" Property="Text" Value="⏶" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
