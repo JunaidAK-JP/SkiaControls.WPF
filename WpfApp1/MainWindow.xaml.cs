@@ -1,4 +1,5 @@
-﻿using SkiaSharpControls.Models;
+﻿using SkiaSharp;
+using SkiaSharpControls.Models;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -22,13 +23,17 @@ namespace WpfApp1
             {
                 Interval = TimeSpan.FromMilliseconds(250)
             };
+            Loaded += (s, e) =>
+            {
+                skiaGrid.Font = font;
+            };
             dispatcher.Tick += (s, e) =>
             {
                 RefreshSkia();
             };
             dispatcher.Start();
         }
-
+        public static SKFont font = new SKFont() { Size = 12, Typeface = SKTypeface.FromFamilyName("Arial") };
 
 
         public void RefreshSkia()
@@ -115,6 +120,12 @@ namespace WpfApp1
         private void ToggleReorder(object sender, RoutedEventArgs e)
         {
             skiaGrid.CanUserReorderColumns = !skiaGrid.CanUserReorderColumns;
+        }
+
+        private void ChangeFont(object sender, RoutedEventArgs e)
+        {
+            font = new SKFont() { Size = 18, Typeface = SKTypeface.FromFamilyName("Arial",SKFontStyle.BoldItalic) };
+            skiaGrid.Font = font;
         }
     }
 }

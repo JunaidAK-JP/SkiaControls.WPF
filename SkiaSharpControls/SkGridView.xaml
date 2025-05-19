@@ -64,7 +64,18 @@
             </Style.Triggers>
         </Style>-->
 
-
+        <Style TargetType="{x:Type Thumb}">
+            <Setter Property="Width" Value="2"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="{x:Type DataGrid}">
             <Setter Property="AutoGenerateColumns" Value="False" />
             <Setter Property="AlternationCount" Value="2" />
@@ -81,7 +92,11 @@
             <Setter Property="IsReadOnly" Value="True" />
         </Style>
 
-        <Style TargetType="{x:Type DataGridColumnHeader}">
+        <Geometry x:Key="UpArrowGeometry">M 0 4 L 8 4 L 4 0 Z</Geometry>
+        <Geometry x:Key="DownArrowGeometry">M 0 0 L 4 4 L 8 0 Z</Geometry>
+
+        <Style x:Key="ColumnHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="BorderThickness" Value="0.5"/>
             <Setter Property="BorderBrush" Value="White" />
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -89,17 +104,34 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Padding" Value="3,3,5,3" />
             <Setter Property="MinWidth" Value="10" />
-
-            <Style.Triggers>
-                <Trigger Property="SortDirection" Value="Ascending">
-                    <Setter Property="Background" Value="LightGreen"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </Trigger>
-                <Trigger Property="SortDirection" Value="Descending">
-                    <Setter Property="Background" Value="LightSalmon"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridColumnHeader}">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" MinWidth="{TemplateBinding MinWidth}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="ContentHeader" Text="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" Width="{TemplateBinding Width}" TextAlignment="Left" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                                <!--<Path x:Name="SortArrow" Grid.Column="1" Margin="0,0,5,0" Fill="White" VerticalAlignment="Center" HorizontalAlignment="Center" />-->
+                                <TextBlock x:Name="SortArrow" Grid.Column="1"  Foreground="White" VerticalAlignment="Center" FontSize="{Binding ElementName=ContentHeader, Path=FontSize}" HorizontalAlignment="Center" />
+                                <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left"/>
+                                <Thumb Grid.Column="2" x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="SortDirection" Value="Ascending">
+                                <Setter TargetName="SortArrow" Property="Text" Value="⏷"  />
+                            </Trigger>
+                            <Trigger Property="SortDirection" Value="Descending">
+                                <Setter TargetName="SortArrow" Property="Text" Value="⏶" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
     </UserControl.Resources>
@@ -184,7 +216,6 @@
             Visibility="Visible"
             SmallChange="1"
             LargeChange="1"
-            Grid.ColumnSpan="2"
             VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.VirtualizationMode="Recycling"
             ValueChanged="HorizontalScrollViewer_ValueChanged"/>
