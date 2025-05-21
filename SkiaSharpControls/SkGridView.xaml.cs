@@ -4,6 +4,7 @@ using SkiaSharpControls.Models;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.DirectoryServices;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -301,7 +302,32 @@ namespace SkiaSharpControls
                 {
                     skGridView.rowHeight = ((SKFont)e.NewValue).Size + 4;
                     skGridView.DataListView.FontSize =  skGridView!.Font!.Size ;
-                    skGridView.SKGridColumnHeader.Height = new GridLength( skGridView!.Font!.Size + 10);
+                    string skiaFontFamilyName = skGridView!.Font!.Typeface.FamilyName;
+
+                    var skFont = skGridView!.Font!;
+                    var skTypeface = skFont.Typeface;
+                    var skStyle = skTypeface.FontStyle;
+
+                    // Set FontFamily
+                    skGridView.DataListView.FontFamily = new System.Windows.Media.FontFamily(skTypeface.FamilyName);
+
+                    // Map SkiaSharp slant to WPF FontStyle
+                    System.Windows.FontStyle wpfFontStyle = FontStyles.Normal;
+                    if (skStyle.Slant == SKFontStyleSlant.Italic)
+                        wpfFontStyle = FontStyles.Italic;
+                    else if (skStyle.Slant == SKFontStyleSlant.Oblique)
+                        wpfFontStyle = FontStyles.Oblique;
+
+                    skGridView.DataListView.FontStyle = wpfFontStyle;
+
+                    // Map SkiaSharp weight to WPF FontWeight
+                    FontWeight wpfFontWeight = FontWeights.Normal;
+                    if (skStyle.Weight >= (int)SKFontStyleWeight.SemiBold)
+                        wpfFontWeight = FontWeights.Bold;
+
+                    skGridView.DataListView.FontWeight = wpfFontWeight;
+
+                    skGridView.SKGridColumnHeader.Height = new GridLength(skGridView.ColumnHeaderVisible ? (skGridView!.Font!.Size + 10) : 0);
                 }
             }
         }
@@ -433,7 +459,7 @@ namespace SkiaSharpControls
                     headerStyle.Setters.Add(new Setter(HorizontalContentAlignmentProperty, column.ContentAlignment == Enum.CellContentAlignment.Right ? HorizontalAlignment.Right :
                                                                                          column.ContentAlignment == Enum.CellContentAlignment.Left ? HorizontalAlignment.Left : HorizontalAlignment.Center));
 
-                    //headerStyle.Setters.Add(new Setter(BackgroundProperty, GetColorBrush(column.BackColor ?? "#FF3F3F3F")));
+                    headerStyle.Setters.Add(new Setter(BackgroundProperty, GetColorBrush(column.BackColor ?? "#FF3F3F3F")));
 
 
                     headerStyle.BasedOn = skGridView.Resources["ColumnHeaderStyle"] as Style;
@@ -446,7 +472,7 @@ namespace SkiaSharpControls
                         HeaderStyle = headerStyle,
                         MinWidth = 30,
                     };
-
+                   
                     if (column.CanUserResize.HasValue)
                         dgColumn.CanUserResize = column.CanUserResize.Value;
                     if (column.CanUserReorder.HasValue)
@@ -455,7 +481,13 @@ namespace SkiaSharpControls
                         dgColumn.CanUserSort = column.CanUserSort.Value;
                     skGridView.DataListView.Columns.Add(dgColumn);
                 }
-
+                var sortColumns= columns.Where(x => x?.GridViewColumnSort != null && x?.GridViewColumnSort != SkGridViewColumnSort.None).LastOrDefault();
+                if (sortColumns != null)
+                {
+                    skGridView!.DataListView.Columns!.Where(x => x.Header as string == (sortColumns.DisplayHeader ?? sortColumns.Header)).FirstOrDefault()!
+                                                    .SortDirection = sortColumns.GridViewColumnSort == SkGridViewColumnSort.Ascending? ListSortDirection.Ascending 
+                                                                    :(sortColumns.GridViewColumnSort == SkGridViewColumnSort.Descending ? ListSortDirection.Descending : null);
+                }
                 skGridView.renderer.SetColumns(columns);
                 skGridView.IsBusy = false;
                 skGridView.SkiaCanvas.InvalidateVisual();
@@ -1216,11 +1248,15 @@ namespace SkiaSharpControls
 
         private void SkiaCanvas_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (SelectedItems.Count > 0 && CanUserSelectRows)
+            try
             {
-                SelectedItems?.Clear();
-                SkiaCanvas.InvalidateVisual();
+                if (SelectedItems != null && SelectedItems?.Count > 0 && CanUserSelectRows)
+                {
+                    SelectedItems?.Clear();
+                    SkiaCanvas.InvalidateVisual();
+                }
             }
+            catch {}
         }
 
         private void skiaContainer_PreviewMouseDown(object sender, MouseButtonEventArgs e)

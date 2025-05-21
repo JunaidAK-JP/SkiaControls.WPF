@@ -78,10 +78,10 @@ namespace WpfApp1
         public List<SkGridViewColumn> Columns { get; set; } =
         [
             new SkGridViewColumn() { Header = "Id",IsVisible=false,CanUserResize=false,CanUserSort=false,CanUserReorder=false,ContentAlignment = CellContentAlignment.Right },
-            new SkGridViewColumn() { Header = "Name", IsVisible=true },
+            new SkGridViewColumn() { Header = "Name", IsVisible=true},
             new SkGridViewColumn() { Header = "Trend" },
             new SkGridViewColumn() { Header = "Trend2" },
-            new SkGridViewColumn() { Header = "Age" },
+            new SkGridViewColumn() { Header = "Age",GridViewColumnSort = SkGridViewColumnSort.Ascending },
             new SkGridViewColumn() { Header = "IsToggle" },
             new SkGridViewColumn() { Header = "Highlighted",ContentAlignment = CellContentAlignment.Right }
         ];
@@ -213,7 +213,7 @@ namespace WpfApp1
                 {
                     template.RendererProperties = new SkRendererProperties()
                     {
-                        TextFont = font,
+                        //TextFont = font,
                         TextForeground = TextForeground,
                         LineBackground = LineBackground
                     };

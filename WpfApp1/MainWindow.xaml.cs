@@ -89,7 +89,7 @@ namespace WpfApp1
                     new SkGridViewColumn() { Header = "Id" },
                     new SkGridViewColumn() { Header = "Trend" },
                     new SkGridViewColumn() { Header = "Trend2" },
-                    new SkGridViewColumn() { Header = "Name" },
+                    new SkGridViewColumn() { Header = "Name",GridViewColumnSort=SkiaSharpControls.Enum.SkGridViewColumnSort.Descending },
                     new SkGridViewColumn() { Header = "IsToggle" },
                     new SkGridViewColumn() { Header = "Highlighted" }
         };
@@ -124,7 +124,7 @@ namespace WpfApp1
 
         private void ChangeFont(object sender, RoutedEventArgs e)
         {
-            font = new SKFont() { Size = 18, Typeface = SKTypeface.FromFamilyName("Arial",SKFontStyle.BoldItalic) };
+            font = new SKFont() { Size = 18, Typeface = SKTypeface.FromFamilyName("Arial",SKFontStyle.Bold) };
             skiaGrid.Font = font;
         }
     }
