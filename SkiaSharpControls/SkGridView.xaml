@@ -9,60 +9,6 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
 
-        <!--<Style TargetType="{x:Type Thumb}">
-            <Setter Property="SnapsToDevicePixels" Value="true" />
-            <Setter Property="OverridesDefaultStyle" Value="true" />
-            <Setter Property="Width" Value="2" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Grid Width="{TemplateBinding Width}" Height="Auto" Background="{TemplateBinding Background}" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style TargetType="{x:Type GridViewColumnHeader}">
-            <Setter Property="OverridesDefaultStyle" Value="True" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="BorderThickness" Value="0,0,0,0.5"/>
-            <Setter Property="BorderBrush" Value="#1E1E1E" />
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Background" Value="#FF3F3F3F"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Padding" Value="8.5,3,5,3" />
-            <Setter Property="MinWidth" Value="10" />
-
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
-                        <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Background="{TemplateBinding Background}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="2" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ContentHeader" Text="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" Width="{TemplateBinding Width}" TextAlignment="Left" FontSize="{TemplateBinding FontSize}"/>
-                                <Thumb x:Name="PART_HeaderGripper" Grid.Column="1" HorizontalAlignment="Right" Width="2" Background="{TemplateBinding BorderBrush}" DragStarted="OnDragStarted" DragCompleted="OnDragCompleted" />
-                            </Grid>
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="Content" Value="{x:Null}">
-                                <Setter Property="BorderThickness" Value="0,0,0.5,0.5" />
-                                <Setter TargetName="PART_HeaderGripper" Property="Visibility" Value="Collapsed" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-
-            <Style.Triggers>
-                <Trigger Property="Content" Value="{x:Null}">
-                    <Setter Property="IsHitTestVisible" Value="False" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>-->
 
         <Style TargetType="{x:Type Thumb}">
             <Setter Property="Width" Value="2"/>

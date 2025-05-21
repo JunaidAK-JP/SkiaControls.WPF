@@ -4,7 +4,7 @@ namespace SkiaSharpControls.Models
 {
     public class SkRendererProperties
     {
-        public SKFont TextFont { get; set; }
+        //public SKFont TextFont { get; set; }
         public SKPaint TextForeground { get; set; }
         public SKPaint LineBackground { get; set; }
         public SKPaint BackgroundBrush { get; set; }
