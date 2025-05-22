@@ -56,7 +56,7 @@
             SortDirectionChanged="{Binding SortDirectionChanged}"
             ColumnLeftClick="{Binding LeftClick}"
             ColumnRightClick="{Binding RightClick}"
-            CanUserSelectRows="True"
+            CanUserSelectRows="False"
             
             />
     </Grid>
