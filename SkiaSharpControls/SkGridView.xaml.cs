@@ -53,7 +53,7 @@ namespace SkiaSharpControls
                             }
                         }),
                         true);
-                
+
 
             };
         }
@@ -301,7 +301,7 @@ namespace SkiaSharpControls
                 if (e.NewValue != null)
                 {
                     skGridView.rowHeight = ((SKFont)e.NewValue).Size + 4;
-                    skGridView.DataListView.FontSize =  skGridView!.Font!.Size ;
+                    skGridView.DataListView.FontSize = skGridView!.Font!.Size;
                     string skiaFontFamilyName = skGridView!.Font!.Typeface.FamilyName;
 
                     var skFont = skGridView!.Font!;
@@ -472,7 +472,7 @@ namespace SkiaSharpControls
                         HeaderStyle = headerStyle,
                         MinWidth = 30,
                     };
-                   
+
                     if (column.CanUserResize.HasValue)
                         dgColumn.CanUserResize = column.CanUserResize.Value;
                     if (column.CanUserReorder.HasValue)
@@ -481,22 +481,22 @@ namespace SkiaSharpControls
                         dgColumn.CanUserSort = column.CanUserSort.Value;
                     skGridView.DataListView.Columns.Add(dgColumn);
                 }
-                var sortColumns= columns.Where(x => x?.GridViewColumnSort != null && x?.GridViewColumnSort != SkGridViewColumnSort.None).LastOrDefault();
+                var sortColumns = columns.Where(x => x?.GridViewColumnSort != null && x?.GridViewColumnSort != SkGridViewColumnSort.None).LastOrDefault();
                 if (sortColumns != null)
                 {
                     skGridView!.DataListView.Columns!.Where(x => x.Header as string == (sortColumns.DisplayHeader ?? sortColumns.Header)).FirstOrDefault()!
-                                                    .SortDirection = sortColumns.GridViewColumnSort == SkGridViewColumnSort.Ascending? ListSortDirection.Ascending 
-                                                                    :(sortColumns.GridViewColumnSort == SkGridViewColumnSort.Descending ? ListSortDirection.Descending : null);
+                                                    .SortDirection = sortColumns.GridViewColumnSort == SkGridViewColumnSort.Ascending ? ListSortDirection.Ascending
+                                                                    : (sortColumns.GridViewColumnSort == SkGridViewColumnSort.Descending ? ListSortDirection.Descending : null);
                 }
                 skGridView.renderer.SetColumns(columns);
                 skGridView.IsBusy = false;
                 skGridView.SkiaCanvas.InvalidateVisual();
                 skGridView.ColumnsChanged?.Invoke();
                 skGridView.MonitorColumnResize(skGridView.DataListView);
-                
 
-            
-                
+
+
+
                 //skGridView.DataListView.ColumnReordered += skGridView.DataListView_ColumnReordered;
 
                 //skGridView.GV.Columns.CollectionChanged -= skGridView.OnColumnsReordered;
@@ -886,13 +886,17 @@ namespace SkiaSharpControls
                 }
 
             }
-            else if (e.LeftButton == MouseButtonState.Pressed && CanUserSelectRows)
+            else if (e.LeftButton == MouseButtonState.Pressed)
             {
-                SelectedItems.Clear();
-                SelectedItems.Add(s[rowIndex]);
-                lastSelectedRowIndex = rowIndex;
+                if (CanUserSelectRows)
+                {
+                    SelectedItems.Clear();
+                    SelectedItems.Add(s[rowIndex]);
+                    lastSelectedRowIndex = rowIndex;
+                }
                 OnRowClicked?.Invoke(s[rowIndex]);
             }
+
             if (e.ClickCount == 2)
                 OnRowDoubleClicked?.Invoke(s[rowIndex]);
             SkiaCanvas.InvalidateVisual();
@@ -1256,7 +1260,7 @@ namespace SkiaSharpControls
                     SkiaCanvas.InvalidateVisual();
                 }
             }
-            catch {}
+            catch { }
         }
 
         private void skiaContainer_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -1363,7 +1367,7 @@ namespace SkiaSharpControls
                 header.AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_LeftClick), true);
                 header.AddHandler(MouseRightButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_RightClick), true);
             }
-            
+
         }
         private void ColumnHeader_LeftClick(object sender, MouseButtonEventArgs e)
         {
