@@ -122,7 +122,6 @@
                   HeadersVisibility="Column"
                   Loaded="DataListView_Loaded"
                   Sorting="DataListView_Sorting"
-                  
                   >
         </DataGrid>
 

@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 
 namespace SkiaSharpControls
@@ -494,8 +495,7 @@ namespace SkiaSharpControls
                 skGridView.ColumnsChanged?.Invoke();
                 skGridView.MonitorColumnResize(skGridView.DataListView);
 
-
-
+                skGridView.InvokeHeaderClickWithDelay();
 
                 //skGridView.DataListView.ColumnReordered += skGridView.DataListView_ColumnReordered;
 
@@ -1361,13 +1361,26 @@ namespace SkiaSharpControls
 
         private void DataListView_Loaded(object sender, RoutedEventArgs e)
         {
+            //InvokeDataGridHeaderClick();
+        }
+        private void InvokeHeaderClickWithDelay()
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                InvokeDataGridHeaderClick();
+            }), DispatcherPriority.Loaded);
+        }
+        private void InvokeDataGridHeaderClick()
+        {
             var headers = FindVisualChildren<DataGridColumnHeader>(DataListView);
             foreach (var header in headers)
             {
+                header.RemoveHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_LeftClick));
+                header.RemoveHandler(MouseRightButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_RightClick));
+
                 header.AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_LeftClick), true);
                 header.AddHandler(MouseRightButtonDownEvent, new MouseButtonEventHandler(ColumnHeader_RightClick), true);
             }
-
         }
         private void ColumnHeader_LeftClick(object sender, MouseButtonEventArgs e)
         {
@@ -1405,6 +1418,9 @@ namespace SkiaSharpControls
                 }
             }
         }
+
+     
+
         public void ScrollToVerticalOffset(double offset)
         {
             VerticalScrollViewer.Value = offset;
