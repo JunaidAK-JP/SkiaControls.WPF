@@ -98,19 +98,7 @@ namespace WpfApp1
             if (data is MyData myData)
             {
                 var r = SelectedItems.Count();
-                //if (SelectedItems.Count == 1)
-                //{
-                //    SelectedItems[0] = myData;
-                //}
-                //else {
-                //    SelectedItems.Add(myData);
-                //}
-                //    if (SelectedItems.Any(x => x.Equals(data)))
-                //    {
-                //        SelectedItems.Remove(myData);
-                //    }
-                //    else
-                //        SelectedItems.Add(myData);
+
             }
         };
 
