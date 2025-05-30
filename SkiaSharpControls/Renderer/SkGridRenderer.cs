@@ -4,6 +4,7 @@ using SkiaSharpControls.Models;
 using SkiaSharpControls.Renderer;
 using System.Collections;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media.TextFormatting;
 
 namespace SkiaSharpControls
 {

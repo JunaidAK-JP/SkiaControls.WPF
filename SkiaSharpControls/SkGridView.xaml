@@ -69,10 +69,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="SortDirection" Value="Ascending">
-                                <Setter TargetName="SortArrow" Property="Text" Value="⏷"  />
+                                <Setter TargetName="SortArrow" Property="Text" Value="⏶"  />
                             </Trigger>
                             <Trigger Property="SortDirection" Value="Descending">
-                                <Setter TargetName="SortArrow" Property="Text" Value="⏶" />
+                                <Setter TargetName="SortArrow" Property="Text" Value="⏷" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -120,8 +120,8 @@
                   HorizontalAlignment="Left"                  
                   ColumnReordered="DataListView_ColumnReordered"
                   HeadersVisibility="Column"
-                  Loaded="DataListView_Loaded"
                   Sorting="DataListView_Sorting"
+                  LayoutUpdated="DataListView_LayoutUpdated"
                   >
         </DataGrid>
 
