@@ -829,7 +829,7 @@ namespace SkiaSharpControls
             var point = e.GetPosition(SkiaCanvas);
 
             int rowIndex = (int)((point.Y + ScrollOffsetY) / rowHeight);
-            double x = point.X;
+            double x = point.X + ScrollOffsetX;
             int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
             var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
 
@@ -913,7 +913,7 @@ namespace SkiaSharpControls
             var point = e.GetPosition(SkiaCanvas);
 
             int rowIndex = (int)((point.Y + ScrollOffsetY) / rowHeight);
-            double x = point.X;
+            double x = point.X + ScrollOffsetX;
             int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
 
             var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
@@ -1270,7 +1270,7 @@ namespace SkiaSharpControls
         {
             if (e.OriginalSource is not SkiaSharp.Views.WPF.SKElement)
             {
-                if (SelectedItems.Count > 0 && !(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && CanUserSelectRows)
+                if (SelectedItems?.Count > 0 && !(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && CanUserSelectRows)
                 {
                     SelectedItems.Clear();
                     SkiaCanvas.InvalidateVisual();
