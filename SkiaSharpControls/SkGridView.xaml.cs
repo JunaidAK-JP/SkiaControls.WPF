@@ -829,7 +829,7 @@ namespace SkiaSharpControls
             var point = e.GetPosition(SkiaCanvas);
 
             int rowIndex = (int)((point.Y + ScrollOffsetY) / rowHeight);
-            double x = point.X;
+            double x = point.X + ScrollOffsetX;
             int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
             var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
 
@@ -913,7 +913,7 @@ namespace SkiaSharpControls
             var point = e.GetPosition(SkiaCanvas);
 
             int rowIndex = (int)((point.Y + ScrollOffsetY) / rowHeight);
-            double x = point.X;
+            double x = point.X + ScrollOffsetX;
             int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
 
             var s = new List<dynamic>((IEnumerable<dynamic>)ItemsSource);
