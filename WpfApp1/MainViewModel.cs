@@ -175,7 +175,7 @@ namespace WpfApp1
 
         public static SKFont font = new SKFont() { Size = 11, Typeface = SKTypeface.FromFamilyName("Arial") };
         public static SKPaint TextForeground = new SKPaint { Color = SKColors.White, IsAntialias = true };
-        public static SKPaint LineBackground = new SKPaint { Color = SKColors.Red, StrokeWidth = 1 };
+        public static SKPaint LineBackground = new SKPaint { Color = SKColors.Red, IsAntialias = true };
 
         private static readonly SKPaint RedPaint = new SKPaint
         {
@@ -190,8 +190,8 @@ namespace WpfApp1
             StrokeWidth = 1,
             IsAntialias = true
         };
-        private static readonly SKPaint BackgroundBrushHighlighting = new SKPaint { Color = SKColors.LightGreen, StrokeWidth = 1, IsAntialias = true };
-        private static readonly SKPaint BorderBrushHighlighting = new SKPaint { Color = SKColors.Blue, StrokeWidth = 1, IsAntialias = true };
+        private static readonly SKPaint BackgroundBrushHighlighting = new SKPaint { Color = SKColors.LightGreen, IsAntialias = true };
+        private static readonly SKPaint BorderBrushHighlighting = new SKPaint { Color = SKColors.Blue, IsAntialias = true };
 
         public Func<object, string, SkCellTemplate> CellTemplateSelector { get; set; } = (row, column) =>
             {

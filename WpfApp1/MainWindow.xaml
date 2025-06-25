@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:WpfApp1"
         xmlns:skia="clr-namespace:SkiaSharpControls;assembly=SkiaSharpControls"
         mc:Ignorable="d" Background="Transparent"
+        
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
