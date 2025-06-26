@@ -69,9 +69,9 @@ namespace SkiaSharpControls
             ShowGridLines = showGridLines;
         }
 
-        public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, SKFont? font,float rowHeight, int totalRows)
+        public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, SKFont? font, float rowHeight, int totalRows)
         {
-            
+
             int firstVisibleRow = Math.Max(0, (int)(scrollOffsetY / rowHeight));
 
             int firstVisibleCol = 0;
@@ -191,7 +191,7 @@ namespace SkiaSharpControls
 
             if (borderColor != null && !isselectedrow)
             {
-                DrawBorder(canvas, borderColor, width, x, y, rowHeight);
+                DrawBorder2(canvas, borderColor, width, x, y, rowHeight);
             }
 
 
@@ -205,7 +205,13 @@ namespace SkiaSharpControls
             canvas.DrawLine(x, y + rowHeight - 2f, x + width, y + rowHeight - 2f, borderColor);//bottom
             canvas.DrawLine(x, y + 0.5f, x + width, y + 0.5f, borderColor); // top
         }
-
+        private static void DrawBorder2(SKCanvas canvas, SKPaint? borderColor, float width, float x, float y, float rowHeight)
+        {
+            canvas.DrawLine(x + 1f, y +1f, x + 1f, y + rowHeight - 1f, borderColor); //left
+            canvas.DrawLine(x + width -2f , y +1f, x + width - 2f , y + rowHeight -2f, borderColor);//right
+            canvas.DrawLine(x + 1f, y + rowHeight - 2f, x + width - 2f, y + rowHeight - 2f, borderColor);//bottom
+            canvas.DrawLine(x + 1f, y + 1f, x + width - 2f, y + 1f, borderColor); // top
+        }
 
         //private static void DrawBorder(SKCanvas canvas, SKPaint borderPaint, float width, float x, float y, float rowHeight)
         //{
@@ -334,7 +340,7 @@ namespace SkiaSharpControls
             else if (cellContentAlignment == CellContentAlignment.Center)
                 textX = x + (width - finalWidth) / 2;
 
-            canvas.DrawText(finalText, textX, y + textFont.Size , textFont, fontColor);
+            canvas.DrawText(finalText, textX, y + textFont.Size, textFont, fontColor);
         }
 
 
@@ -353,7 +359,7 @@ namespace SkiaSharpControls
         //}
         private void DrawRect(SKCanvas canvas, int rowIndex, float x, float y, SKPaint backColor, float width, float rowHeight)
         {
-            float left = ShowGridLines ? x : x - 1;
+            float left = ShowGridLines ? x : x;
             float top = ShowGridLines ? y : y - 1;
             float right = x + width;
             float bottom = y + rowHeight;

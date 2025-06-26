@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:SkiaSharpControls"
              xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              mc:Ignorable="d" 
+             UseLayoutRounding="True"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
 
@@ -43,8 +44,8 @@
 
         <Style x:Key="ColumnHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
             <Setter Property="OverridesDefaultStyle" Value="True" />
-            <Setter Property="BorderThickness" Value="0.5"/>
-            <Setter Property="BorderBrush" Value="White" />
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#000000" />
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="Background" Value="#FF3F3F3F"/>
             <Setter Property="Foreground" Value="White"/>
@@ -125,8 +126,8 @@
                   >
         </DataGrid>
 
-        <StackPanel Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
-            <skia:SKElement    
+        <StackPanel   Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+            <skia:SKElement  
                 x:Name="SkiaCanvas" 
                 Focusable="True"
                 FocusVisualStyle="{x:Null}"
