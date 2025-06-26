@@ -207,10 +207,10 @@ namespace SkiaSharpControls
         }
         private static void DrawBorder2(SKCanvas canvas, SKPaint? borderColor, float width, float x, float y, float rowHeight)
         {
-            canvas.DrawLine(x + 1f, y, x + 1f, y + rowHeight - 1f, borderColor); //left
-            canvas.DrawLine(x + width - 1f, y, x + width - 2f, y + rowHeight, borderColor);//right
+            canvas.DrawLine(x + 1f, y +1f, x + 1f, y + rowHeight - 1f, borderColor); //left
+            canvas.DrawLine(x + width -2f , y +1f, x + width - 2f , y + rowHeight -2f, borderColor);//right
             canvas.DrawLine(x + 1f, y + rowHeight - 2f, x + width - 2f, y + rowHeight - 2f, borderColor);//bottom
-            canvas.DrawLine(x + 1f, y + 1f, x + width - 2f, y + 0.5f, borderColor); // top
+            canvas.DrawLine(x + 1f, y + 1f, x + width - 2f, y + 1f, borderColor); // top
         }
 
         //private static void DrawBorder(SKCanvas canvas, SKPaint borderPaint, float width, float x, float y, float rowHeight)
