@@ -44,7 +44,7 @@
 
         <Style x:Key="ColumnHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
             <Setter Property="OverridesDefaultStyle" Value="True" />
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="1,0,0,0"/>
             <Setter Property="BorderBrush" Value="#000000" />
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="Background" Value="#FF3F3F3F"/>
@@ -87,7 +87,7 @@
         <!-- Custom Scroll Bar -->
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="Auto"/>
             <!-- Scroll bar width -->
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>

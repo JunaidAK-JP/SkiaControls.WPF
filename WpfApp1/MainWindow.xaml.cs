@@ -127,5 +127,10 @@ namespace WpfApp1
             font = new SKFont() { Size = 18, Typeface = SKTypeface.FromFamilyName("Arial",SKFontStyle.Bold) };
             skiaGrid.Font = font;
         }
+
+        private void ToggleVerticalScrollBar(object sender, RoutedEventArgs e)
+        {
+            skiaGrid.VerticalScrollBarVisible = !skiaGrid.VerticalScrollBarVisible;
+        }
     }
 }

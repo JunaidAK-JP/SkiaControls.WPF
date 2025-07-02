@@ -32,6 +32,7 @@
         <Button Grid.Column="1" Grid.Row="1" Height="30" Content="Toggle Sort" Click="ToggleSort"  />
         <Button Grid.Column="1" Grid.Row="2" Height="30" Content="Toggle Reorder" Click="ToggleReorder"  />
         <Button Grid.Column="1" Grid.Row="3" Height="30" Content="Change Font" Click="ChangeFont"  />
+        <Button Grid.Column="1" Grid.Row="4" Height="30" Content="Toggle Vertical ScrollBar" Click="ToggleVerticalScrollBar"  />
 
         <skia:SkGridView 
             x:Name="skiaGrid" Grid.Row="5"
