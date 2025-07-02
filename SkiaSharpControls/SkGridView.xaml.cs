@@ -37,6 +37,7 @@ namespace SkiaSharpControls
 
             Loaded += (s, o) =>
             {
+                PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Critical;
                 SkiaCanvas.Height = GetSkiaHeight(TotalRows);
                 SkiaCanvas.Width = GetSkiaWidth();
                 DataListViewScroll = FindScrollViewer(DataListView);
