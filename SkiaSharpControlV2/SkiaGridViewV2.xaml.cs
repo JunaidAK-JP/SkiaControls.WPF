@@ -3,11 +3,16 @@ using SkiaSharp;
 using SkiaSharpControlV2.Enum;
 using SkiaSharpControlV2.Helpers;
 using System.Collections;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data.Common;
+using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -22,9 +27,17 @@ namespace SkiaSharpControlV2
     //[ContentProperty(nameof(Columns))]
     public partial class SkiaGridViewV2 : UserControl
     {
+
+        #region Properties
+        private float ScrollOffsetX = 0, ScrollOffsetY = 0,RowHeight = 12 + 4;
+        private float TotalRows { get => ItemsSource.Cast<object>().Count(); }
+        private ScrollViewer DataListViewScroll { get => Helper.FindScrollViewer(DataListView); }
+        private ICollectionView? _collectionView;
+        #endregion Properties
         public SkiaGridViewV2()
         {
             InitializeComponent();
+            DataListView.ItemsSource = new List<string> { "" };
             //DispatcherTimer tm = new DispatcherTimer()
             //{
             //    Interval = TimeSpan.FromMilliseconds(250)
@@ -34,15 +47,22 @@ namespace SkiaSharpControlV2
             //    var col = Columns;
             //};
             //tm.Start();
+    
             Loaded += (s, e) =>
             {
                 UpdateColumnsInDataGrid();
+                UpdateScrollValues();
+                if(Columns == null || Columns?.Count == 0)
+                    TryGenerateColumns(ItemsSource);
+            };
+            SizeChanged += (s, o) =>
+            {
+                UpdateScrollValues();
             };
 
         }
+
         #region Columns
-
-
         public SkGridColumnCollection Columns
         {
             get => (SkGridColumnCollection)GetValue(ColumnsProperty);
@@ -67,7 +87,57 @@ namespace SkiaSharpControlV2
 
         private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+            if (d is not SkiaGridViewV2 grid)
+                return;
 
+            if (e.OldValue is INotifyCollectionChanged oldCollection)
+                oldCollection.CollectionChanged -= grid!.OnItemsChanged!;
+
+            if (e.NewValue is INotifyCollectionChanged newCollection)
+                newCollection.CollectionChanged += grid!.OnItemsChanged!;
+
+            grid._collectionView = CollectionViewSource.GetDefaultView(e.NewValue);
+
+            grid.UpdateSkiaGrid();
+            grid.UpdateScrollValues();
+
+        }
+        private void OnItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateSkiaGrid();
+            UpdateScrollValues();
+        }
+        private void TryGenerateColumns(object itemsSource)
+        {
+            if (itemsSource is IEnumerable enumerable)
+            {
+                var itemType = itemsSource.GetType().GetInterfaces()
+                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    .Select(i => i.GetGenericArguments()[0])
+                    .FirstOrDefault()
+                    ?? enumerable.Cast<object>().FirstOrDefault()?.GetType();
+
+                if (itemType != null && Columns.Count == 0)
+                {
+                    GenerateColumnsFromType(itemType);
+                }
+            }
+        }
+        private void GenerateColumnsFromType(Type modelType)
+        {
+            Columns.Clear();
+            foreach (var prop in modelType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                Columns.Add(new SkGridViewColumn
+                {
+                    Header = prop.Name,
+                   // BindingPath = prop.Name,
+                    Width = 120,
+                    IsVisible = true
+                });
+            }
+            UpdateColumnsInDataGrid();
+            UpdateScrollValues();
         }
         #endregion ItemSource
 
@@ -146,6 +216,7 @@ namespace SkiaSharpControlV2
                     var col = Columns.FirstOrDefault(x => x.Header == column?.Header.ToString() || x.DisplayHeader == column?.Header.ToString());
                     if (col != null)
                         col.Width = column.ActualWidth;
+                    UpdateScrollValues();
                 }
             }
             catch (Exception)
@@ -162,36 +233,129 @@ namespace SkiaSharpControlV2
                 col.PropertyChanged += Column_PropertyChanged;
             }
         }
-
         private void Column_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (sender is SkGridViewColumn column)
             {
-                DataGridColumn? col = DataListView.Columns.FirstOrDefault(x => x.Header == column?.Header?.ToString());
+                DataGridColumn? col = DataListView.Columns.FirstOrDefault(x => x.Header.ToString() == column?.Header?.ToString());
                 if (col != null)
                 {
                     if (e.PropertyName == nameof(SkGridViewColumn.IsVisible))
+                    {
                         col.Visibility = !column.IsVisible ? Visibility.Collapsed : Visibility.Visible;
+                        UpdateScrollValues();
+                    }
                     if (e.PropertyName == nameof(SkGridViewColumn.CanUserReorder))
-                        col.CanUserResize = column.CanUserResize.Value;
+                        col.CanUserResize = column!.CanUserResize!.Value;
                     if (e.PropertyName == nameof(SkGridViewColumn.CanUserResize))
-                        col.CanUserReorder = column.CanUserReorder.Value;
+                        col.CanUserReorder = column!.CanUserReorder!.Value;
                     if (e.PropertyName == nameof(SkGridViewColumn.CanUserSort))
-                        col.CanUserSort = column.CanUserSort.Value;
+                        col.CanUserSort = column!.CanUserSort!.Value;
                     if (e.PropertyName == nameof(SkGridViewColumn.GridViewColumnSort)) { }
                     if (e.PropertyName == nameof(SkGridViewColumn.BackColor))
                     {
-                        
                         var newStyle = new Style(typeof(DataGridColumnHeader), col.HeaderStyle);
                         newStyle.Setters.Add(new Setter(Control.BackgroundProperty, Helper.GetColorBrush(column.BackColor ?? "#FF3F3F3F")) );
-
-                        
                         col.HeaderStyle = newStyle;
                     }
                 }
 
             }
         }
+        private double GetSkiaHeight()
+        {
+            if (MainGrid.ActualHeight < (TotalRows * RowHeight))
+            {
+                return MainGrid.ActualHeight;
+            }
+            return (TotalRows * RowHeight);
+        }
+
+        private double GetSkiaWidth()
+        {
+            var totalcolumnwidth = GetVisibleColumnsWidth();
+            if (MainGrid.ActualWidth > totalcolumnwidth)
+            {
+                return totalcolumnwidth;
+            }
+            return MainGrid.ActualWidth;
+        }
+        private void UpdateSkiaGrid() 
+        {
+            GetSkiaWidth();
+            GetSkiaHeight();
+        }
+        private double GetVisibleColumnsWidth() => DataListView.Columns.Where(x => x.Visibility == Visibility.Visible).Sum(x => x.Width.Value);
+
+        private void UpdateScrollValues() 
+        {
+            HorizontalScrollViewer.Minimum = 0;
+            HorizontalScrollViewer.ViewportSize = MainGrid.ActualWidth;
+            HorizontalScrollViewer.Maximum = (GetVisibleColumnsWidth() + 10) - MainGrid.ActualWidth + 10;
+
+            VerticalScrollViewer.Minimum = 0;
+            VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
+            VerticalScrollViewer.Maximum = ((TotalRows + 3.3) * RowHeight) - MainGrid.ActualHeight;
+        }
+        private void ApplySort(string propertyName, ListSortDirection direction)
+        {
+            _collectionView?.SortDescriptions.Clear();
+            _collectionView?.SortDescriptions.Add(new SortDescription(propertyName, direction));
+            _collectionView?.Refresh();
+        }
+
         #endregion PrivateMethods
+
+        private void MainGrid_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            {
+                HorizontalScrollViewer.Value -= e.Delta / 1;
+            }
+            else
+            {
+                VerticalScrollViewer.Value -= e.Delta / 1;
+            }
+        }
+
+        private void MainGrid_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            //SkiaCanvas.Focus();
+        }
+
+        private void HorizontalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            ScrollOffsetX = (float)(e.NewValue);
+            DataListViewScroll?.ScrollToHorizontalOffset(ScrollOffsetX);
+        }
+
+        private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            ScrollOffsetY = (float)e.NewValue;
+        }
+        private void DataListView_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            e.Handled = false;
+
+            var column = e.Column;
+            var direction = column.SortDirection != ListSortDirection.Ascending
+                ? SkGridViewColumnSort.Ascending
+                : SkGridViewColumnSort.Descending;
+
+            column.SortDirection = column.SortDirection != ListSortDirection.Ascending
+                ? ListSortDirection.Ascending
+                : ListSortDirection.Descending;
+
+            foreach (var item in Columns.Where(x=>x.GridViewColumnSort != SkGridViewColumnSort.None))
+            {
+                item.GridViewColumnSort = SkGridViewColumnSort.None;
+            }
+            var col = Columns.FirstOrDefault(x => x.Header == column?.Header.ToString() || x.DisplayHeader == column?.Header.ToString());
+            col!.GridViewColumnSort = direction;
+            ApplySort(col.BindingPath,
+                      col.GridViewColumnSort == SkGridViewColumnSort.Ascending
+                      ? ListSortDirection.Ascending
+                      : ListSortDirection.Descending);
+        }
     }
 }

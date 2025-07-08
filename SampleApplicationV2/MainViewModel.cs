@@ -49,6 +49,15 @@ namespace SampleApplicationV2
             OnPropertyChanged(nameof(Columns));
 
         });
+        public ICommand InsertNewItems => new RelayCommand(() =>
+        {
+            foreach (var item in RandomDataGenerator.Generate(5))
+            {
+                Items.Insert(0, item);
+            }
+            
+
+        });
         #endregion 
 
 

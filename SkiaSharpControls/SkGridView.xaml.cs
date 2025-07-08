@@ -1114,7 +1114,6 @@ namespace SkiaSharpControls
         {
             if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
             {
-
                 HorizontalScrollViewer.Value -= e.Delta / 1;
             }
             else

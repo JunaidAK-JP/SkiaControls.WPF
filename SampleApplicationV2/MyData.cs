@@ -41,6 +41,7 @@ namespace SampleApplicationV2
             return $"{Name} - {Price}";
         }
     }
+
     public static class RandomDataGenerator
     {
         private static readonly Random rand = new();

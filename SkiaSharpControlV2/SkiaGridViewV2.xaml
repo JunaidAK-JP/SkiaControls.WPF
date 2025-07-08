@@ -82,9 +82,9 @@
         </Style>
 
     </UserControl.Resources>
-    <!--MouseWheel="MainGrid_MouseWheel" LostFocus="SkiaCanvas_LostFocus" MouseDown="MainGrid_MouseDown"-->
+    <!-- LostFocus="SkiaCanvas_LostFocus" MouseDown="MainGrid_MouseDown"-->
 
-    <Grid x:Name="MainGrid" >
+    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel"  MouseDown="MainGrid_MouseDown">
         <!-- Custom Scroll Bar -->
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -110,7 +110,7 @@
                   BorderThickness="0"
                   HorizontalAlignment="Left"     
                   HeadersVisibility="Column"
-               
+                  Sorting="DataListView_Sorting"
                   >
         </DataGrid>
 
@@ -143,8 +143,9 @@
             Grid.Column="1"
             VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.VirtualizationMode="Recycling"
+            ValueChanged="VerticalScrollViewer_ValueChanged"
             />
-        <!--ValueChanged="VerticalScrollViewer_ValueChanged"-->
+        <!---->
         <ScrollBar 
             x:Name="HorizontalScrollViewer"
             Grid.Row="2"
@@ -156,7 +157,8 @@
             LargeChange="1"
             VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.VirtualizationMode="Recycling"
+            ValueChanged="HorizontalScrollViewer_ValueChanged"
             />
-        <!--ValueChanged="HorizontalScrollViewer_ValueChanged"-->
+        <!---->
     </Grid>
 </UserControl>
