@@ -40,12 +40,14 @@ namespace SampleApplicationV2
             Columns.UpdatedAt.IsVisible = false;
             Columns.Category.IsVisible = false;
             Columns.Category.IsVisible = false;
-            
+            Columns.Id.Width = 50;
+
         });
 
         public ICommand ChangeColumns3 => new RelayCommand(() =>
         {
             Columns = new();
+            
             OnPropertyChanged(nameof(Columns));
 
         });

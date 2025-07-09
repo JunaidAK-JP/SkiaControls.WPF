@@ -8,9 +8,9 @@ using System.Windows.Markup;
 
 namespace SkiaSharpControlV2
 {
-    public class SkGridViewColumn : DependencyObject, INotifyPropertyChanged
+    public class SKGridViewColumn : DependencyObject, INotifyPropertyChanged
     {
-        public SkGridViewColumn()
+        public SKGridViewColumn()
         {
 
         }
@@ -19,6 +19,15 @@ namespace SkiaSharpControlV2
         private void OnPropertyChanged([CallerMemberName] string? prop = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 
+
+        public string? Name
+        {
+            get => (string?)GetValue(NameProperty);
+            set { SetValue(NameProperty, value); OnPropertyChanged(); }
+        }
+
+        public static readonly DependencyProperty NameProperty =
+            DependencyProperty.Register(nameof(Name), typeof(string), typeof(SKGridViewColumn), new PropertyMetadata(null));
         public string? Header
         {
             get => (string?)GetValue(HeaderProperty);
@@ -26,7 +35,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty HeaderProperty =
-            DependencyProperty.Register(nameof(Header), typeof(string), typeof(SkGridViewColumn), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(Header), typeof(string), typeof(SKGridViewColumn), new PropertyMetadata(null));
 
         public string BindingPath
         {
@@ -35,7 +44,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty BindingPathProperty =
-            DependencyProperty.Register(nameof(BindingPath), typeof(string), typeof(SkGridViewColumn), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(BindingPath), typeof(string), typeof(SKGridViewColumn), new PropertyMetadata(null));
 
         public string? DisplayHeader
         {
@@ -44,7 +53,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty DisplayHeaderProperty =
-            DependencyProperty.Register(nameof(DisplayHeader), typeof(string), typeof(SkGridViewColumn), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(DisplayHeader), typeof(string), typeof(SKGridViewColumn), new PropertyMetadata(null));
 
         public double Width
         {
@@ -53,7 +62,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty WidthProperty =
-            DependencyProperty.Register(nameof(Width), typeof(double), typeof(SkGridViewColumn), new PropertyMetadata(100.0));
+            DependencyProperty.Register(nameof(Width), typeof(double), typeof(SKGridViewColumn), new PropertyMetadata(100.0, (s, e) => TriggerChanged(s, e)));
 
 
 
@@ -64,7 +73,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty BackColorProperty =
-            DependencyProperty.Register(nameof(BackColor), typeof(string), typeof(SkGridViewColumn), new PropertyMetadata(null, (s, e) => TriggerChanged(s, e)));
+            DependencyProperty.Register(nameof(BackColor), typeof(string), typeof(SKGridViewColumn), new PropertyMetadata(null, (s, e) => TriggerChanged(s, e)));
 
 
 
@@ -75,7 +84,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty ContentAlignmentProperty =
-            DependencyProperty.Register(nameof(ContentAlignment), typeof(CellContentAlignment), typeof(SkGridViewColumn), new PropertyMetadata(CellContentAlignment.Left));
+            DependencyProperty.Register(nameof(ContentAlignment), typeof(CellContentAlignment), typeof(SKGridViewColumn), new PropertyMetadata(CellContentAlignment.Left));
 
         public bool IsVisible
         {
@@ -84,7 +93,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty IsVisibleProperty =
-            DependencyProperty.Register(nameof(IsVisible), typeof(bool?), typeof(SkGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
+            DependencyProperty.Register(nameof(IsVisible), typeof(bool?), typeof(SKGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
 
 
         public bool? CanUserResize
@@ -94,7 +103,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty CanUserResizeProperty =
-            DependencyProperty.Register(nameof(CanUserResize), typeof(bool?), typeof(SkGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
+            DependencyProperty.Register(nameof(CanUserResize), typeof(bool?), typeof(SKGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
 
         public bool? CanUserReorder
         {
@@ -103,7 +112,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty CanUserReorderProperty =
-            DependencyProperty.Register(nameof(CanUserReorder), typeof(bool?), typeof(SkGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
+            DependencyProperty.Register(nameof(CanUserReorder), typeof(bool?), typeof(SKGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
 
         public bool? CanUserSort
         {
@@ -112,7 +121,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty CanUserSortProperty =
-            DependencyProperty.Register(nameof(CanUserSort), typeof(bool?), typeof(SkGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
+            DependencyProperty.Register(nameof(CanUserSort), typeof(bool?), typeof(SKGridViewColumn), new PropertyMetadata(true, (s, e) => TriggerChanged(s, e)));
 
         public SkGridViewColumnSort GridViewColumnSort
         {
@@ -121,7 +130,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty GridViewColumnSortProperty =
-            DependencyProperty.Register(nameof(GridViewColumnSort), typeof(SkGridViewColumnSort), typeof(SkGridViewColumn), new PropertyMetadata(SkGridViewColumnSort.None, (s, e) => TriggerChanged(s, e)));
+            DependencyProperty.Register(nameof(GridViewColumnSort), typeof(SkGridViewColumnSort), typeof(SKGridViewColumn), new PropertyMetadata(SkGridViewColumnSort.None, (s, e) => TriggerChanged(s, e)));
 
         public SKCellTemplate? CellTemplate
         {
@@ -129,22 +138,46 @@ namespace SkiaSharpControlV2
             set => SetValue(CellTemplateProperty, value);
         }
         public static readonly DependencyProperty CellTemplateProperty =
-            DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(SkGridViewColumn), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(SKGridViewColumn), new PropertyMetadata(null));
+
+
         private static void TriggerChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
         {
-            if (s is SkGridViewColumn a) a.OnPropertyChanged(e.Property.ToString());
+            if (s is SKGridViewColumn a) a.OnPropertyChanged(e.Property.ToString());
         }
+        
     }
-    public class SKSetter
+
+    public class GroupDefinition : DependencyObject
     {
-        public string Property { get; set; }
-        public object Value { get; set; }
+        public string? GroupBy { get; set; }
+        public ObservableCollection<GroupField>? HeaderFields { get; set; } = new();
+
+    }
+
+    public class GroupField : DependencyObject
+    {
+        public required string BindingPath { get; set; } 
+        public required string TargetColumns { get; set; } 
+        public SkAggregation Aggregation { get; set; }  // Sum, Count, Avg, Min, Max
+        public SKCellTemplate? CellTemplate
+        {
+            get => (SKCellTemplate?)GetValue(CellTemplateProperty);
+            set => SetValue(CellTemplateProperty, value);
+        }
+        public static readonly DependencyProperty CellTemplateProperty =
+            DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(GroupField), new PropertyMetadata(null));
+    }
+
+    public class SKSetter:DependencyObject
+    {
+        public required SkStyleProperty Property { get; set; }
+        public required object Value { get; set; }
     }
     public class SKCondition
     {
-        public string Binding { get; set; }
-        public string Operator { get; set; } = "=";
-        public object Value { get; set; }
+        public required string BindingPath { get; set; }
+        public required object Value { get; set; }
     }
 
     public abstract class SKTrigger
@@ -166,58 +199,33 @@ namespace SkiaSharpControlV2
     [ContentProperty(nameof(Triggers))]
     public class SKCellTemplate
     {
-        public string? Format { get; set; }
-        public string? TextColor { get; set; }
+       public ObservableCollection<SKSetter> Setters { get; set; } = new(); // Can be SKSetter or SKMultiSetter
         public ObservableCollection<SKTrigger> Triggers { get; set; } = new(); // Can be SKDataTrigger or SKMultiTrigger
     }
 
-    //public class SkDataTemplate  : DependencyObject , INotifyPropertyChanged
-    //{
-    //    public string? BackColor
-    //    {
-    //        get => (string?)GetValue(BackColorProperty);
-    //        set => SetValue(BackColorProperty, value);
-    //    }
-    //    public static readonly DependencyProperty BackColorProperty =
-    //        DependencyProperty.Register(nameof(BackColor), typeof(string), typeof(SkGridViewColumn), new PropertyMetadata(null, (s, e) => TriggerChanged(s, e)));
+    public enum SkStyleProperty
+    { 
+        Background,
+        Foreground,
+        BorderColor,
+        BorderThickness,
+        ContentAlignment,
+        Format,
+    }
+    public enum SkAggregation
+    {
+        None,
+        Sum,
+        Avg,
+        Min,
+        Max,
+        Count,
+    }
 
-    //    public string? Format
-    //    {
-    //        get => (string?)GetValue(FormatProperty);
-    //        set => SetValue(FormatProperty, value);
-    //    }
-    //    public static readonly DependencyProperty FormatProperty =
-    //        DependencyProperty.Register(nameof(Format), typeof(string), typeof(SkGridViewColumn), new PropertyMetadata(null, (s, e) => TriggerChanged(s, e)));
-
-    //    public string? BorderColor
-    //    {
-    //        get => (string?)GetValue(BorderColorProperty);
-    //        set => SetValue(BorderColorProperty, value);
-    //    }
-    //    public static readonly DependencyProperty BorderColorProperty =
-    //        DependencyProperty.Register(nameof(BorderColor), typeof(string), typeof(SkGridViewColumn), new PropertyMetadata(null, (s, e) => TriggerChanged(s, e)));
-
-    //    public bool ShowBorder
-    //    {
-    //        get => (bool)GetValue(ShowBorderProperty);
-    //        set => SetValue(ShowBorderProperty, value);
-    //    }
-    //    public static readonly DependencyProperty ShowBorderProperty =
-    //        DependencyProperty.Register(nameof(ShowBorder), typeof(bool), typeof(SkGridViewColumn), new PropertyMetadata(false, (s, e) => TriggerChanged(s, e)));
-
-    //    public event PropertyChangedEventHandler? PropertyChanged;
-
-    //    private void OnPropertyChanged([CallerMemberName] string? prop = null)
-    //        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-
-    //    private static void TriggerChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
-    //    {
-    //        if (s is SkDataTemplate a) a.OnPropertyChanged(e.Property.ToString());
-    //    }
-    //}
-    public class SkGridColumnCollection : ObservableCollection<SkGridViewColumn>
+    public class SkGridColumnCollection : ObservableCollection<SKGridViewColumn>
     {
     }
+
     // ============================
     // 🎯 Trigger Evaluation Logic
     // ============================

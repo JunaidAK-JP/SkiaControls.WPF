@@ -118,20 +118,22 @@
            LayoutUpdated="DataListView_LayoutUpdated"
            ColumnReordered="DataListView_ColumnReordered"-->
 
-        <!--<StackPanel   Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+
+        <!--PreviewMouseDown="skiaContainer_PreviewMouseDown"-->
+        <StackPanel   Background="Transparent"  x:Name="skiaContainer"  Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
             <skia:SKElement  
                 x:Name="SkiaCanvas" 
                 Focusable="True"
                 FocusVisualStyle="{x:Null}"
-                PaintSurface="OnPaintSurface"
+                PaintSurface="SkiaCanvas_PaintSurface"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Left"
-                MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
-                KeyDown="SkiaCanvas_KeyDown"
-                MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"
-                />
-        </StackPanel>-->
 
+                />
+        </StackPanel>
+        <!--MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
+                KeyDown="SkiaCanvas_KeyDown"
+                MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"-->
         <ScrollBar 
             x:Name="VerticalScrollViewer"
             Grid.RowSpan="2"
