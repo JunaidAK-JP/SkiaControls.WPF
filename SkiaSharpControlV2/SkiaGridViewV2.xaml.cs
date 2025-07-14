@@ -2,6 +2,7 @@
 using SkiaSharp;
 using SkiaSharpControlV2.Enum;
 using SkiaSharpControlV2.Helpers;
+using SkiaSharpControlV2.Model;
 using SkiaSharpControlV2.Renderer;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -38,6 +39,9 @@ namespace SkiaSharpControlV2
         private ICollectionView? _collectionView;
         private bool IsBusy { get; set; } = false;
         private float Scale { get; set; }
+        private bool _isDirty = true;
+
+        internal Dictionary<string, (bool IsExpended, float x, float y, float height, float width)> GroupToggelDetails = new();
         #endregion Properties
         public SkiaGridViewV2()
         {
@@ -52,9 +56,10 @@ namespace SkiaSharpControlV2
             //    var col = Columns;
             //};
             //tm.Start();
-            SkiaRenderer = new();
+            SkiaRenderer = new(this);
             Loaded += (s, e) =>
             {
+
                 SetScale();
                 UpdateColumnsInDataGrid();
                 UpdateScrollValues();
@@ -62,12 +67,28 @@ namespace SkiaSharpControlV2
                 if (Columns == null || Columns?.Count == 0)
                     TryGenerateColumns(ItemsSource);
 
-                SkiaRenderer.UpdateItems(ItemsSource);
+
                 SkiaRenderer.UpdateSelectedItems(SelectedItems);
                 SkiaRenderer.SetColumns(Columns!);
+                SkiaRenderer.SetGroup(GroupSettings);
+                if (GroupSettings != null)
+                {
+                    if (_collectionView != null && _collectionView.CanGroup)
+                    {
+                        _collectionView.GroupDescriptions.Clear();
+                        _collectionView.GroupDescriptions.Add(new PropertyGroupDescription(GroupSettings.GroupBy));
+                    }
+                    UpdateGroupCollection();
+                }
+                _collectionView.CollectionChanged += CollectionViewChanged;
+                SkiaRenderer.UpdateVisibleColumns();
                 SkiaRenderer.SetGridLinesVisibility(true);
                 SkiaRenderer.SetScrollBars(HorizontalScrollViewer, VerticalScrollViewer);
                 SkiaRenderer.SetFont("Tahoma", 12);
+            };
+            Unloaded += (s, e) =>
+            {
+                _collectionView.CollectionChanged -= CollectionViewChanged;
             };
             SizeChanged += (s, o) =>
             {
@@ -77,7 +98,11 @@ namespace SkiaSharpControlV2
 
             };
 
+        }
 
+        private void CollectionViewChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateGroupCollection();
         }
 
         #region Columns
@@ -93,15 +118,24 @@ namespace SkiaSharpControlV2
         #endregion Columns
 
         #region GroupColumns
-        public GroupDefinition GroupSettings
+        public SKGroupDefinition GroupSettings
         {
-            get => (GroupDefinition)GetValue(GroupSettingsProperty);
+            get => (SKGroupDefinition)GetValue(GroupSettingsProperty);
             set => SetValue(GroupSettingsProperty, value);
         }
 
         public static readonly DependencyProperty GroupSettingsProperty =
-            DependencyProperty.Register(nameof(GroupSettings), typeof(GroupDefinition), typeof(SkiaGridViewV2), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(GroupSettings), typeof(SKGroupDefinition), typeof(SkiaGridViewV2), new PropertyMetadata(null));
 
+
+        //public bool ShowGroupColumn
+        //{
+        //    get => (bool)GetValue(ShowGroupColumnProperty);
+        //    set => SetValue(ShowGroupColumnProperty, value);
+        //}
+
+        //public static readonly DependencyProperty ShowGroupColumnProperty =
+        //    DependencyProperty.Register(nameof(ShowGroupColumn), typeof(bool), typeof(SkiaGridViewV2), new PropertyMetadata(true));
         #endregion GroupColumns
 
         #region ItemSource
@@ -120,30 +154,30 @@ namespace SkiaSharpControlV2
             if (d is not SkiaGridViewV2 grid)
                 return;
 
-            if (e.NewValue is IEnumerable list)
-                grid.TotalRows = list.Cast<object>().Count();
 
-            if (e.OldValue is INotifyCollectionChanged oldCollection)
-                oldCollection.CollectionChanged -= grid!.OnItemsChanged!;
+            //if (e.OldValue is INotifyCollectionChanged oldCollection)
+            //    oldCollection.CollectionChanged -= grid!.OnItemsChanged!;
 
-            if (e.NewValue is INotifyCollectionChanged newCollection)
-                newCollection.CollectionChanged += grid!.OnItemsChanged!;
+            //if (e.NewValue is INotifyCollectionChanged newCollection)
+            //    newCollection.CollectionChanged += grid!.OnItemsChanged!;
 
             grid._collectionView = CollectionViewSource.GetDefaultView(e.NewValue);
+
+            grid.SkiaRenderer.UpdateItems(grid._collectionView);
+
+            grid._collectionView.CollectionChanged -= grid.CollectionViewChanged;
+            grid._collectionView.CollectionChanged += grid.CollectionViewChanged;
+
 
             grid.UpdateSkiaGrid();
             grid.UpdateScrollValues();
 
         }
-        private void OnItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems is IEnumerable list)
-                TotalRows = ItemsSource.Cast<object>().Count();
-
-
-            UpdateSkiaGrid();
-            UpdateScrollValues();
-        }
+        //private void OnItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        //{
+        //    UpdateSkiaGrid();
+        //    UpdateScrollValues();
+        //}
         private void TryGenerateColumns(object itemsSource)
         {
             if (itemsSource is IEnumerable enumerable)
@@ -198,14 +232,13 @@ namespace SkiaSharpControlV2
         }
         #endregion SelectedItems
 
-
         #region PrivateMethods
         private void UpdateColumnsInDataGrid()
         {
             if (Columns != null && Columns.Count > 0)
             {
                 DataListView.Columns.Clear();
-
+                //CreateGroupColumns();
                 foreach (var column in Columns)
                 {
                     var headerStyle = new Style(typeof(DataGridColumnHeader));
@@ -223,7 +256,7 @@ namespace SkiaSharpControlV2
                         Width = column.Width,
                         Visibility = !column.IsVisible ? Visibility.Collapsed : Visibility.Visible,
                         HeaderStyle = headerStyle,
-                        MinWidth = 30,
+                        MinWidth = 40,
                     };
 
                     if (column.CanUserResize.HasValue)
@@ -271,7 +304,8 @@ namespace SkiaSharpControlV2
             {
                 if (sender is DataGridTextColumn column)
                 {
-                    var col = Columns.FirstOrDefault(x => x.Header == column?.Header.ToString() || x.DisplayHeader == column?.Header.ToString());
+                    var colname = (column?.Header ?? "").ToString();
+                    var col = Columns.FirstOrDefault(x => x.Header == colname || x.DisplayHeader == colname);
                     if (col != null)
                         col.Width = column.ActualWidth;
                     UpdateScrollValues();
@@ -295,7 +329,7 @@ namespace SkiaSharpControlV2
         {
             if (sender is SKGridViewColumn column)
             {
-                DataGridColumn? col = DataListView.Columns.FirstOrDefault(x => x.Header.ToString() == column?.Header?.ToString());
+                DataGridColumn? col = DataListView.Columns.FirstOrDefault(x => x.Header?.ToString() == column?.Header?.ToString());
                 if (col != null)
                 {
                     if (e.PropertyName == nameof(SKGridViewColumn.IsVisible))
@@ -313,9 +347,13 @@ namespace SkiaSharpControlV2
                     if (e.PropertyName == nameof(SKGridViewColumn.GridViewColumnSort)) { }
                     if (e.PropertyName == nameof(SKGridViewColumn.Width))
                     {
+                        if (IsBusy) return;
+                        IsBusy = true;
                         col.Width = new DataGridLength(column.Width);
                         UpdateScrollValues();
                         UpdateSkiaGrid();
+                        IsBusy = false;
+                        Refresh();
                     }
                     if (e.PropertyName == nameof(SKGridViewColumn.BackColor))
                     {
@@ -323,6 +361,7 @@ namespace SkiaSharpControlV2
                         newStyle.Setters.Add(new Setter(Control.BackgroundProperty, Helper.GetColorBrush(column.BackColor ?? "#FF3F3F3F")));
                         col.HeaderStyle = newStyle;
                     }
+                    SkiaRenderer.UpdateVisibleColumns();
                 }
 
             }
@@ -348,10 +387,10 @@ namespace SkiaSharpControlV2
         private void UpdateSkiaGrid()
         {
             SkiaCanvas.Height = GetSkiaHeight();
-            SkiaCanvas.Width = GetSkiaWidth(); 
+            SkiaCanvas.Width = GetSkiaWidth();
         }
         private double GetVisibleColumnsWidth() => DataListView.Columns.Where(x => x.Visibility == Visibility.Visible).Sum(x => x.Width.Value);
-
+        private void MarkDirty() => _isDirty = true;
         private void UpdateScrollValues()
         {
             HorizontalScrollViewer.Minimum = 0;
@@ -362,8 +401,6 @@ namespace SkiaSharpControlV2
             VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
             VerticalScrollViewer.Maximum = ((TotalRows + 3.3) * RowHeight) - MainGrid.ActualHeight;
         }
-
-
         private void SetScale()
         {
             PresentationSource source = PresentationSource.FromVisual(this);
@@ -383,7 +420,103 @@ namespace SkiaSharpControlV2
             _collectionView?.SortDescriptions.Add(new SortDescription(propertyName, direction));
             _collectionView?.Refresh();
         }
+        private void UpdateGroupCollection()
+        {
+            if (GroupSettings != null)
+            {
+                SkiaRenderer.GroupItemSource = FlattenGroupedItems(_collectionView!, GroupToggelDetails);
+            }
+            UpdateTotalRows();
+        }
+        private void UpdateTotalRows()
+        {
+            if (GroupSettings != null)
+            {
+                TotalRows = SkiaRenderer.GroupItemSource.Where(x => x.IsExpanded == true || x.IsGroupHeader).Count();
+            }
+            else
+            {
+                TotalRows = _collectionView!.Cast<object>().Count();
+            }
+            UpdateSkiaGrid();
+            UpdateScrollValues();
+        }
+        private void ResetGroupToggleValues()
+        {
+            foreach (CollectionViewGroup group in _collectionView.Groups)
+            {
+                var groupName = group.Name?.ToString();
+                if (GroupToggelDetails.ContainsKey(groupName))
+                {
+                    var res = GroupToggelDetails[groupName];
+                    res.x = 0;
+                    res.y = 0;
+                    res.height = 0;
+                    res.width = 0;
+                    GroupToggelDetails[groupName] = res;
+                }
+            }
+        }
+        internal static List<GroupModel> FlattenGroupedItems(ICollectionView collectionView, Dictionary<string, (bool IsExpended, float x, float y, float height, float width)> groupToggelDetails)
+        {
+            var result = new List<GroupModel>();
 
+            if (collectionView == null || !collectionView.CanGroup || collectionView.Groups == null)
+                return result;
+
+            foreach (CollectionViewGroup group in collectionView.Groups)
+            {
+                var isExpended = true;
+                var groupName = group.Name?.ToString();
+
+                if (groupToggelDetails.ContainsKey(groupName))
+                    isExpended = groupToggelDetails[groupName].IsExpended;
+                else
+                {
+                    groupToggelDetails.Add(groupName, (true, 0, 0, 0, 0));
+                }
+
+                result.Add(new GroupModel
+                {
+                    IsGroupHeader = true,
+                    GroupName = groupName ?? "",
+                    Item = null,
+                    IsExpanded = isExpended
+                });
+
+                foreach (var obj in group.Items)
+                {
+                    result.Add(new GroupModel
+                    {
+                        IsGroupHeader = false,
+                        GroupName = groupName ?? "",
+                        Item = obj,
+                        IsExpanded = isExpended
+                    });
+                }
+            }
+            return result;
+        }
+        private void UpdateGroupToggle(double x, double y)
+        {
+            if (GroupSettings != null)
+            {
+                //&& (v.y >= y && v.height <= y)
+                var values = GroupToggelDetails.Where(v => (x >= v.Value.x && x <= v.Value.x + v.Value.width) && (y >= v.Value.y && y <= v.Value.y + v.Value.height)).LastOrDefault();
+                if (values.Key != null)
+                {
+                    var res = GroupToggelDetails[values.Key];
+                    res.IsExpended = !res.IsExpended;
+                    GroupToggelDetails[values.Key] = res;
+                    foreach (var item in SkiaRenderer.GroupItemSource.Where(x => x.GroupName == values.Key))
+                    {
+                        item.IsExpanded = res.IsExpended;
+                    }
+                    UpdateTotalRows();
+                    Refresh();
+                }
+            }
+        }
         #endregion PrivateMethods
 
         private void MainGrid_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
@@ -405,21 +538,26 @@ namespace SkiaSharpControlV2
 
         private void HorizontalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (IsBusy) return;
+            IsBusy = true;
             ScrollOffsetX = (float)(e.NewValue);
             DataListViewScroll?.ScrollToHorizontalOffset(ScrollOffsetX);
+            Refresh();
+            IsBusy = false;
         }
 
         private void VerticalScrollViewer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (IsBusy) return;
+            IsBusy = true;
             ScrollOffsetY = (float)e.NewValue;
+            Refresh();
+            IsBusy = false;
         }
 
         private void SkiaCanvas_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
-            if (IsBusy)
-            {
-                return;
-            }
+            if (IsBusy) return;
 
             SKCanvas canvas = e.Surface.Canvas;
             canvas.Clear();
@@ -441,6 +579,20 @@ namespace SkiaSharpControlV2
 
             }
 
+        }
+
+        private void SkiaCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+        private void SkiaCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var point = e.GetPosition(SkiaCanvas);
+
+            int rowIndex = (int)((point.Y + ScrollOffsetY) / RowHeight);
+            double x = point.X + ScrollOffsetX;
+            int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
+            UpdateGroupToggle(x, (point.Y + ScrollOffsetY));
         }
         private void DataListView_Sorting(object sender, DataGridSortingEventArgs e)
         {
@@ -465,18 +617,35 @@ namespace SkiaSharpControlV2
                       col.GridViewColumnSort == SkGridViewColumnSort.Ascending
                       ? ListSortDirection.Ascending
                       : ListSortDirection.Descending);
+            ResetGroupToggleValues();
         }
 
+        private void DataListView_ColumnReordered(object sender, DataGridColumnEventArgs e)
+        {
+            if (sender is DataGrid items)
+            {
+                var columns = new List<SKGridViewColumn>();
+
+                foreach (var item in items.Columns.OrderBy(c => c.DisplayIndex))
+                {
+                    var existingItem = Columns.FirstOrDefault(x => x.Header == item.Header?.ToString() || x.DisplayHeader == item.Header?.ToString());
+                    existingItem.DisplayIndex = item.DisplayIndex;
+
+                }
+
+                SkiaRenderer.UpdateVisibleColumns();
+                Refresh();
+            }
+        }
         public void Refresh()
         {
+
             try
             {
                 SkiaCanvas.InvalidateVisual();
             }
-            catch (Exception ex)
-            {
+            catch { }
 
-            }
 
         }
     }

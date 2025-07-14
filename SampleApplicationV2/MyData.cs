@@ -6,6 +6,7 @@ namespace SampleApplicationV2
 {
     public class MyData
     {
+        public string GroupColumn { get; set; }
         public int Id { get; set; }
         public string? Name { get; set; }
         public double Price { get; set; }
@@ -54,7 +55,7 @@ namespace SampleApplicationV2
                 list.Add(new MyData
                 {
                     Id = i + 1,
-                    Name = $"Item {i + 1}",
+                    Name = $"Item {rand.Next(1, 100)}",
                     Price = rand.NextDouble() * 1000,
                     IsActive = rand.Next(2) == 1,
                     CreatedAt = RandomDate(),
@@ -91,8 +92,9 @@ namespace SampleApplicationV2
 
     public class Columns
     {
+        public ColProperties GroupColumn { get; set; } = new() { Width=50};
         public ColProperties Id { get; set; } = new() { Width=200};
-        public ColProperties Name { get; set; } = new (){ IsVisible = false };
+        public ColProperties Name { get; set; } = new (){ IsVisible = true };
         public ColProperties Price { get; set; } = new();
         public ColProperties IsActive { get; set; } = new();
         public ColProperties CreatedAt { get; set; } = new();

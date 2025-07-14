@@ -1,7 +1,9 @@
 ﻿
+using System.ComponentModel;
 using System.Drawing;
-using System.Windows.Controls;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace SkiaSharpControlV2.Helpers
@@ -33,5 +35,20 @@ namespace SkiaSharpControlV2.Helpers
             }
             return null;
         }
+        public static (string? Value, Type Type) ReadCurrentItemWithTypes(object currentItem, string propertyName)
+        {
+            if (currentItem == null || string.IsNullOrWhiteSpace(propertyName))
+                return (null, typeof(void));
+
+            var type = currentItem.GetType();
+            var prop = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+            if (prop == null)
+                return (null, typeof(void)); // Property not found
+
+            object? val = prop.GetValue(currentItem);
+            return (val?.ToString(), prop.PropertyType);
+        }
     }
+
 }

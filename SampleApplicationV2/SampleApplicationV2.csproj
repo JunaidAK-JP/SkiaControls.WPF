@@ -9,7 +9,29 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="logop1.ico" />
+    <None Remove="logop1.png" />
+    <None Remove="P1_logo_JPEG.jpg" />
+    <None Remove="P1_logo_PNG.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SkiaSharpControlV2\SkiaSharpControlV2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="logop1.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="logop1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="P1_logo_JPEG.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="P1_logo_PNG.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

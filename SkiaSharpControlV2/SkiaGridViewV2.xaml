@@ -111,6 +111,7 @@
                   HorizontalAlignment="Left"     
                   HeadersVisibility="Column"
                   Sorting="DataListView_Sorting"
+                  ColumnReordered="DataListView_ColumnReordered"
                   >
         </DataGrid>
 
@@ -128,7 +129,8 @@
                 PaintSurface="SkiaCanvas_PaintSurface"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Left"
-
+                MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
+                MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"
                 />
         </StackPanel>
         <!--MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"

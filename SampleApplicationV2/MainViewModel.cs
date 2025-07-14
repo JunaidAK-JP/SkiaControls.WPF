@@ -14,7 +14,7 @@ namespace SampleApplicationV2
         {
             Columns = new Columns();
 
-            Items = new ObservableCollection<MyData>(RandomDataGenerator.Generate(100));
+            Items = new ObservableCollection<MyData>(RandomDataGenerator.Generate(1000));
 
            
         }
@@ -55,10 +55,27 @@ namespace SampleApplicationV2
         {
             foreach (var item in RandomDataGenerator.Generate(5))
             {
+                item.Name = "Item 1";
                 Items.Insert(0, item);
             }
             
+        });
 
+        public ICommand UpdateItemsValues => new RelayCommand(() =>
+        {
+            var item = RandomDataGenerator.Generate(100);
+            Random rand = new();
+            foreach (var items in Items.Where(x=>x.Name == "Item 1"))
+            {
+                var randomnumber = rand.Next(1, 100);
+                items.Id = item[randomnumber].Id;
+                items.Price = item[randomnumber].Price;
+                items.Rating = item[randomnumber].Rating;
+                items.CreatedAt = item[randomnumber].CreatedAt;
+                items.Description = item[randomnumber].Description;
+                items.Quantity = item[randomnumber].Quantity;
+                items.Discount = item[randomnumber].Discount;
+            }
         });
         #endregion 
 

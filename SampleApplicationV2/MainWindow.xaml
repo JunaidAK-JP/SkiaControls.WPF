@@ -6,7 +6,10 @@
         xmlns:local="clr-namespace:SampleApplicationV2"
         mc:Ignorable="d"
         xmlns:skia="clr-namespace:SkiaSharpControlV2;assembly=SkiaSharpControlV2"
-        Title="MainWindow" Height="700" Width="1000">
+        Title="MainWindow" Height="700" Width="1000"
+        Icon="/logop1.ico"
+        UseLayoutRounding="True"
+        >
     <Grid>
         <Grid.Resources>
             <local:BindingProxy x:Key="ProxyElement" Data="{Binding}" />
@@ -35,7 +38,7 @@
             <Button Grid.Column="0" Grid.Row="1" Content="Change Columns 2" Command="{Binding ChangeColumns2}"/>
             <Button Grid.Column="0" Grid.Row="2" Content="New Columns"  Command="{Binding ChangeColumns3}"/>
             <Button Grid.Column="0" Grid.Row="3" Content="Insert New Items" Command="{Binding InsertNewItems}"/>
-            <Button Grid.Column="0" Grid.Row="4" Content="[Name]"/>
+            <Button Grid.Column="0" Grid.Row="4" Content="Update Items 1 Values" Command="{Binding UpdateItemsValues}"/>
             <Button Grid.Column="0" Grid.Row="5" Content="[Name]"/>
             <Button Grid.Column="1" Grid.Row="0" Content="[Name]"/>
             <Button Grid.Column="1" Grid.Row="1" Content="[Name]"/>
@@ -64,18 +67,26 @@
         </Grid>
 
         <Grid Grid.Row="1">
-            <skia:SkiaGridViewV2 ItemsSource="{Binding Items}" Name="skiaGrid">
+            <skia:SkiaGridViewV2 ItemsSource="{Binding Items}" 
+                                 Name="skiaGrid">
                 <skia:SkiaGridViewV2.GroupSettings>
-                    <skia:GroupDefinition GroupBy="Name">
-                        <skia:GroupDefinition.HeaderFields>
-                            <skia:GroupField BindingPath="Name"  Aggregation="None"  TargetColumns="Name" >
-                            </skia:GroupField>
-                        </skia:GroupDefinition.HeaderFields>
-                    </skia:GroupDefinition>
+                    <skia:SKGroupDefinition GroupBy="Name" Target="Id">
+                        <skia:SKGroupDefinition.HeaderFields>
+                            <skia:SKGroupField BindingPath="Name"  Aggregation="None"  TargetColumns="Id" >
+                            </skia:SKGroupField>
+                        </skia:SKGroupDefinition.HeaderFields>
+                        <skia:SKGroupDefinition.ToggleSymbol>
+                            <skia:SKGroupToggleSymbol Expand="-" Collapse="+" TargetColumns="GroupColumn">
+
+                            </skia:SKGroupToggleSymbol>
+                        </skia:SKGroupDefinition.ToggleSymbol>
+                    </skia:SKGroupDefinition>
                 </skia:SkiaGridViewV2.GroupSettings>
 
                 <skia:SkiaGridViewV2.Columns>
-                    <skia:SKGridViewColumn  Width="{Binding Data.Columns.Id.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="{Binding Data.Columns.Id.IsVisible, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Header="ID" BindingPath="Id"  ContentAlignment="Left" >
+                    <skia:SKGridViewColumn Name="GroupColumn" Width="{Binding Data.Columns.GroupColumn.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="True" Header=""   CanUserSort="False" />
+                    <skia:SKGridViewColumn Name="Name" Width="{Binding Data.Columns.Name.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="{Binding Data.Columns.Name.IsVisible, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Header="Name" BindingPath="Name" BackColor="#21A366" CanUserSort="True" />
+                    <skia:SKGridViewColumn Name="Id"  Width="{Binding Data.Columns.Id.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="{Binding Data.Columns.Id.IsVisible, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Header="ID" BindingPath="Id"  ContentAlignment="Left" >
                         <!--<skia:SKGridViewColumn.CellTemplate>
                             <skia:SKCellTemplate >
                                 <skia:SKCellTemplate.Setters>
@@ -99,7 +110,7 @@
                             </skia:SKCellTemplate>
                         </skia:SKGridViewColumn.CellTemplate>-->
                     </skia:SKGridViewColumn>
-                    <skia:SKGridViewColumn Name="Name" Width="{Binding Data.Columns.Name.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="{Binding Data.Columns.Name.IsVisible, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Header="Name" BindingPath="Name" BackColor="#21A366" CanUserSort="True" />
+                    
                     <skia:SKGridViewColumn Width="{Binding Data.Columns.Price.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="{Binding Data.Columns.Price.IsVisible, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" BackColor="{Binding Data.Columns.Price.BackColor, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Header="Price" BindingPath="Price" ContentAlignment="Right" />
                     <skia:SKGridViewColumn Width="{Binding Data.Columns.IsActive.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="{Binding Data.Columns.IsActive.IsVisible, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Header="Is Active" BindingPath="IsActive"  />
                     <skia:SKGridViewColumn Width="{Binding Data.Columns.CreatedAt.Width, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" IsVisible="{Binding Data.Columns.CreatedAt.IsVisible, Source={StaticResource ProxyElement},UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Header="Created At" BindingPath="CreatedAt"  />

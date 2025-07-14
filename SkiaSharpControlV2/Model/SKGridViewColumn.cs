@@ -140,25 +140,27 @@ namespace SkiaSharpControlV2
         public static readonly DependencyProperty CellTemplateProperty =
             DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(SKGridViewColumn), new PropertyMetadata(null));
 
-
+        public int DisplayIndex { get; set; }
         private static void TriggerChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
         {
             if (s is SKGridViewColumn a) a.OnPropertyChanged(e.Property.ToString());
         }
-        
+
     }
 
-    public class GroupDefinition : DependencyObject
+    public class SKGroupDefinition : DependencyObject
     {
         public string? GroupBy { get; set; }
-        public ObservableCollection<GroupField>? HeaderFields { get; set; } = new();
+        public string? Target { get; set; }
+        public ObservableCollection<SKGroupField>? HeaderFields { get; set; } = new();
+        public SKGroupToggleSymbol? ToggleSymbol { get; set; } 
 
     }
 
-    public class GroupField : DependencyObject
+    public class SKGroupField : DependencyObject
     {
-        public required string BindingPath { get; set; } 
-        public required string TargetColumns { get; set; } 
+        public required string BindingPath { get; set; }
+        public required string TargetColumns { get; set; }
         public SkAggregation Aggregation { get; set; }  // Sum, Count, Avg, Min, Max
         public SKCellTemplate? CellTemplate
         {
@@ -166,10 +168,10 @@ namespace SkiaSharpControlV2
             set => SetValue(CellTemplateProperty, value);
         }
         public static readonly DependencyProperty CellTemplateProperty =
-            DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(GroupField), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(SKGroupField), new PropertyMetadata(null));
     }
 
-    public class SKSetter:DependencyObject
+    public class SKSetter : DependencyObject
     {
         public required SkStyleProperty Property { get; set; }
         public required object Value { get; set; }
@@ -191,6 +193,14 @@ namespace SkiaSharpControlV2
         public object Value { get; set; }
     }
 
+    public class SKGroupToggleSymbol : DependencyObject
+    {
+        public string? TargetColumns { get; set; }
+        public string? Expand { get; set; } 
+        public string? Collapse { get; set; } 
+    }
+    
+
     public class SKMultiTrigger : SKTrigger
     {
         public ObservableCollection<SKCondition> Conditions { get; set; } = new();
@@ -199,12 +209,13 @@ namespace SkiaSharpControlV2
     [ContentProperty(nameof(Triggers))]
     public class SKCellTemplate
     {
-       public ObservableCollection<SKSetter> Setters { get; set; } = new(); // Can be SKSetter or SKMultiSetter
+        public ObservableCollection<SKSetter> Setters { get; set; } = new(); // Can be SKSetter or SKMultiSetter
         public ObservableCollection<SKTrigger> Triggers { get; set; } = new(); // Can be SKDataTrigger or SKMultiTrigger
     }
 
+
     public enum SkStyleProperty
-    { 
+    {
         Background,
         Foreground,
         BorderColor,
