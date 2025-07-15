@@ -56,7 +56,7 @@ namespace SampleApplicationV2
                 {
                     Id = i + 1,
                     Name = $"Item {rand.Next(1, 100)}",
-                    Price = rand.NextDouble() * 1000,
+                    Price = rand.Next(-10000,10000) ,
                     IsActive = rand.Next(2) == 1,
                     CreatedAt = RandomDate(),
                     Description = $"Desc {Guid.NewGuid().ToString()[..8]}",

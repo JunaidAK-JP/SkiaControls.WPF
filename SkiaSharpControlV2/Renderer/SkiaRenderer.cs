@@ -33,13 +33,19 @@ namespace SkiaSharpControlV2.Renderer
         private ScrollBar? VerticalScrollViewer { get; set; }
         private bool ShowGridLines { get; set; }
 
-        
+
 
         private readonly List<SKGridViewColumn> _visibleColumnsCache = new();
         private SKPaint SelectedRowBackgroundHighlighting = new SKPaint() { Color = SKColor.Parse("#0072C6"), IsAntialias = true };
         private SKPaint SelectedRowTextColor = new SKPaint { Color = SKColors.White, StrokeWidth = 1, IsAntialias = true };
         private SKPaint GridLineColor = new SKPaint { Color = SKColors.Black, StrokeWidth = 1, IsAntialias = true };
         private SKPaint FontColor = new SKPaint { Color = SKColors.Black, StrokeWidth = 1, IsAntialias = true };
+        private SKPaint RowBackgroundColor = new SKPaint { Color = SKColors.White, StrokeWidth = 1, IsAntialias = true };
+        private SKPaint GroupRowBackgroundColor = new SKPaint { Color = SKColors.Gray, StrokeWidth = 1, IsAntialias = true };
+        private SKPaint GroupFontColor = new SKPaint { Color = SKColors.White, StrokeWidth = 1, IsAntialias = true };
+        private SKPaint AlternatingRowBackground = null;
+
+
         private SKPaint CellBackgroundColor = new SKPaint { Color = SKColors.White, StrokeWidth = 1, IsAntialias = true };
         private SKPaint CellBorderColor = new SKPaint { Color = SKColors.Green, StrokeWidth = 1, IsAntialias = true };
 
@@ -81,6 +87,31 @@ namespace SkiaSharpControlV2.Renderer
         public void SetGridLinesColor(string color)
         {
             GridLineColor.Color = SKColor.Parse(color);
+        }
+        public void SetGroupRowBackgroundColor(string? color)
+        {
+            if (color != null)
+                GroupRowBackgroundColor.Color = SKColor.Parse(color);
+        }
+        public void SetGroupFontColor(string? color)
+        {
+            if (color != null)
+                GroupFontColor.Color = SKColor.Parse(color);
+        }
+        public void SetForeground(string color)
+        {
+            FontColor.Color = SKColor.Parse(color);
+        }
+        public void SetRowBackgroundColor(string color)
+        {
+            RowBackgroundColor.Color = SKColor.Parse(color);
+        }
+        public void SetAlternatingRowBackground(string color)
+        {
+            if (color == null)
+                AlternatingRowBackground = null;
+            else
+                AlternatingRowBackground = new SKPaint { Color = SKColor.Parse(color), StrokeWidth = 1, IsAntialias = true };
         }
         public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, float rowHeight, int totalRows)
         {
@@ -146,18 +177,20 @@ namespace SkiaSharpControlV2.Renderer
 
                     if (GroupItems != null)
                     {
+                        var rowcolor = row % 2 == 0 ? RowBackgroundColor : AlternatingRowBackground ?? RowBackgroundColor;
                         if (GroupItems[row].IsGroupHeader)
                         {
                             string value = Convert.ToString(GroupItems[row]?.GroupName!);
                             if (Group?.Target == visibleColumns[colIndex].Name)
                             {
-                               
+
                                 CellContentAlignment cellContentAlignment = visibleColumns[colIndex].ContentAlignment;
-                                Draw(canvas, colIndex, row, value!, FontColor, SymbolFont, CellBackgroundColor, null, GVColumnWidth, currentX, currentY, cellContentAlignment, rowHeight, HighlightSelected(item));
+                                Draw(canvas, colIndex, row, value!, GroupFontColor, SymbolFont, GroupRowBackgroundColor, null, GVColumnWidth, currentX, currentY, cellContentAlignment, rowHeight, HighlightSelected(GroupItems[row].Item));
                             }
-                            if (Group?.ToggleSymbol.TargetColumns == visibleColumns[colIndex].Name)
+                            else if (Group?.ToggleSymbol.TargetColumns == visibleColumns[colIndex].Name)
                             {
-                                if (CurrentContext.GroupToggelDetails.ContainsKey(value!)) {
+                                if (CurrentContext.GroupToggelDetails.ContainsKey(value!))
+                                {
                                     var values = CurrentContext.GroupToggelDetails[value];
                                     values.x = currentX;
                                     values.y = currentY;
@@ -166,14 +199,18 @@ namespace SkiaSharpControlV2.Renderer
                                     CurrentContext.GroupToggelDetails[value] = values;
 
                                 }
-                                Draw(canvas, colIndex, row, GroupItems[row].IsExpanded ? Group?.ToggleSymbol?.Expand : Group?.ToggleSymbol?.Collapse, FontColor, SymbolFont, CellBackgroundColor, null, GVColumnWidth, currentX, currentY, CellContentAlignment.Center, rowHeight, HighlightSelected(item));
+                                Draw(canvas, colIndex, row, GroupItems[row].IsExpanded ? Group?.ToggleSymbol?.Expand : Group?.ToggleSymbol?.Collapse, GroupFontColor, SymbolFont, GroupRowBackgroundColor, null, GVColumnWidth, currentX, currentY, CellContentAlignment.Center, rowHeight, HighlightSelected(GroupItems[row].Item));
                             }
+                            else
+                                Draw(canvas, colIndex, row, "", GroupFontColor, SymbolFont, GroupRowBackgroundColor, null, GVColumnWidth, currentX, currentY, CellContentAlignment.Center, rowHeight, HighlightSelected(GroupItems[row].Item));
                         }
                         else
                         {
                             var value = reflectionHelper.ReadCurrentItemWithTypes(GroupItems[row].Item, visibleColumns[colIndex].BindingPath);
+                            var val = Helper.ApplyFormat(value.Type, value.Value, visibleColumns[colIndex].Format, visibleColumns[colIndex].ShowBracketOnNegative);
+
                             CellContentAlignment cellContentAlignment = visibleColumns[colIndex].ContentAlignment;
-                            Draw(canvas, colIndex, row, value!.Value!, FontColor, SymbolFont, CellBackgroundColor, null, GVColumnWidth, currentX, currentY, cellContentAlignment, rowHeight, HighlightSelected(item));
+                            Draw(canvas, colIndex, row, val, FontColor, SymbolFont, rowcolor, null, GVColumnWidth, currentX, currentY, cellContentAlignment, rowHeight, HighlightSelected(GroupItems[row].Item));
                         }
                     }
                     else
@@ -200,7 +237,7 @@ namespace SkiaSharpControlV2.Renderer
 
             if (Columns == null) return;
 
-            foreach (var col in Columns.OrderBy(x=>x.DisplayIndex).ToList())
+            foreach (var col in Columns.OrderBy(x => x.DisplayIndex).ToList())
             {
                 if (col.IsVisible)
                     _visibleColumnsCache.Add(col);
@@ -208,7 +245,8 @@ namespace SkiaSharpControlV2.Renderer
         }
         private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, SKPaint? borderColor, float width, float x, float y, CellContentAlignment cellContentAlignment, float rowHeight, bool isselectedrow)
         {
-
+            if (isselectedrow)
+            { }
             var rowBackColor = isselectedrow ? SelectedRowBackgroundHighlighting : backColor;
             var rowTextColor = isselectedrow ? SelectedRowTextColor : fontcolor;
 

@@ -141,6 +141,22 @@ namespace SkiaSharpControlV2
             DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(SKGridViewColumn), new PropertyMetadata(null));
 
         public int DisplayIndex { get; set; }
+
+        public string? Format
+        {
+            get => (string?)GetValue(FormatProperty);
+            set => SetValue(FormatProperty, value);
+        }
+        public static readonly DependencyProperty FormatProperty =
+            DependencyProperty.Register(nameof(Format), typeof(string), typeof(SKGridViewColumn), new PropertyMetadata(null));
+
+        public bool ShowBracketOnNegative
+        {
+            get => (bool)GetValue(ShowBracketOnNegativeProperty);
+            set => SetValue(ShowBracketOnNegativeProperty, value);
+        }
+        public static readonly DependencyProperty ShowBracketOnNegativeProperty =
+            DependencyProperty.Register(nameof(ShowBracketOnNegative), typeof(bool), typeof(SKGridViewColumn), new PropertyMetadata(false));
         private static void TriggerChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
         {
             if (s is SKGridViewColumn a) a.OnPropertyChanged(e.Property.ToString());
@@ -148,13 +164,38 @@ namespace SkiaSharpControlV2
 
     }
 
-    public class SKGroupDefinition : DependencyObject
+    public class SKGroupDefinition : DependencyObject, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private void OnPropertyChanged([CallerMemberName] string? prop = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        public string ForegroundColor
+        {
+            get { return (string)GetValue(ForegroundColorProperty); }
+            set { SetValue(ForegroundColorProperty, value); }
+        }
+
+        public static readonly DependencyProperty ForegroundColorProperty =
+            DependencyProperty.Register(nameof(ForegroundColor), typeof(string), typeof(SKGroupDefinition), new PropertyMetadata(default, (s, e) => TriggerChanged(s, e)));
+
+        public string RowBackground
+        {
+            get { return (string)GetValue(RowBackgroundProperty); }
+            set { SetValue(RowBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty RowBackgroundProperty =
+            DependencyProperty.Register(nameof(RowBackground), typeof(string), typeof(SKGroupDefinition), new PropertyMetadata(default,(s, e) => TriggerChanged(s, e)));
+
         public string? GroupBy { get; set; }
         public string? Target { get; set; }
         public ObservableCollection<SKGroupField>? HeaderFields { get; set; } = new();
-        public SKGroupToggleSymbol? ToggleSymbol { get; set; } 
-
+        public SKGroupToggleSymbol? ToggleSymbol { get; set; }
+        private static void TriggerChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
+        {
+            if (s is SKGroupDefinition a) a.OnPropertyChanged(e.Property.ToString());
+        }
     }
 
     public class SKGroupField : DependencyObject

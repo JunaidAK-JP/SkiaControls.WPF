@@ -34,7 +34,9 @@ namespace SkiaSharpControlV2
         private SkiaRenderer SkiaRenderer;
         #region Properties
         private float ScrollOffsetX = 0, ScrollOffsetY = 0, RowHeight = 12 + 4;
-        private int TotalRows;
+        private int TotalRows, lastSelectedRowIndex = 0;
+        private int? _selectionAnchorIndex = null;
+
         private ScrollViewer DataListViewScroll { get => Helper.FindScrollViewer(DataListView); }
         private ICollectionView? _collectionView;
         private bool IsBusy { get; set; } = false;
@@ -82,9 +84,16 @@ namespace SkiaSharpControlV2
                 }
                 _collectionView.CollectionChanged += CollectionViewChanged;
                 SkiaRenderer.UpdateVisibleColumns();
-                SkiaRenderer.SetGridLinesVisibility(true);
+                SkiaRenderer.SetGridLinesVisibility(ShowGridLines);
                 SkiaRenderer.SetScrollBars(HorizontalScrollViewer, VerticalScrollViewer);
                 SkiaRenderer.SetFont("Tahoma", 12);
+                SkiaRenderer.SetGridLinesColor(GridLinesColor);
+                SkiaRenderer.SetForeground(ForegroundColor);
+                SkiaRenderer.SetRowBackgroundColor(RowBackground);
+                SkiaRenderer.SetAlternatingRowBackground(AlternatingRowBackground);
+                SkiaRenderer.SetGroupRowBackgroundColor(GroupSettings?.RowBackground);
+                SkiaRenderer.SetGroupFontColor(GroupSettings?.ForegroundColor);
+                SubscribeToGroupColumnEvents(GroupSettings);
             };
             Unloaded += (s, e) =>
             {
@@ -168,7 +177,7 @@ namespace SkiaSharpControlV2
             grid._collectionView.CollectionChanged -= grid.CollectionViewChanged;
             grid._collectionView.CollectionChanged += grid.CollectionViewChanged;
 
-
+            grid.lastSelectedRowIndex = 0;
             grid.UpdateSkiaGrid();
             grid.UpdateScrollValues();
 
@@ -230,7 +239,153 @@ namespace SkiaSharpControlV2
                 skGridView.SkiaCanvas.InvalidateVisual();
             }
         }
+
+        public bool CanUserSelectRows
+        {
+            get { return (bool)GetValue(CanUserSelectRowsProperty); }
+            set { SetValue(CanUserSelectRowsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for VerticalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CanUserSelectRowsProperty =
+            DependencyProperty.Register(
+                nameof(CanUserSelectRows),
+                typeof(bool),
+                typeof(SkiaGridViewV2),
+                new PropertyMetadata(true, CanUserSelectRowsPropertyChanged));
+
+        private static void CanUserSelectRowsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkiaGridViewV2 skGridView)
+            {
+                if (!(bool)e.NewValue)
+                    skGridView?.SelectedItems?.Clear();
+            }
+        }
+        public Action<object, string> OnCellClicked
+        {
+            get { return (Action<object, string>)GetValue(OnCellClickedProperty); }
+            set { SetValue(OnCellClickedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty OnCellClickedProperty =
+            DependencyProperty.Register(nameof(OnCellClicked), typeof(Action<object, string>), typeof(SkiaGridViewV2), new PropertyMetadata(default));
+
+        public Action<object> OnRowClicked
+        {
+            get { return (Action<object>)GetValue(OnRowClickedProperty); }
+            set { SetValue(OnRowClickedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty OnRowClickedProperty =
+            DependencyProperty.Register(nameof(OnRowClicked), typeof(Action<object>), typeof(SkiaGridViewV2), new PropertyMetadata(default));
+
+        public Action<object> OnRowDoubleClicked
+        {
+            get { return (Action<object>)GetValue(OnRowDoubleClickedProperty); }
+            set { SetValue(OnRowDoubleClickedProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty OnRowDoubleClickedProperty =
+            DependencyProperty.Register(nameof(OnRowDoubleClicked), typeof(Action<object>), typeof(SkiaGridViewV2), new PropertyMetadata(default));
+
+        public Action<Key> OnPreviewKeyDownEvent
+        {
+            get { return (Action<Key>)GetValue(OnPreviewKeyDownEventProperty); }
+            set { SetValue(OnPreviewKeyDownEventProperty, value); }
+        }
+
+        public static readonly DependencyProperty OnPreviewKeyDownEventProperty =
+            DependencyProperty.Register(nameof(OnPreviewKeyDownEvent), typeof(Action<Key>), typeof(SkiaGridViewV2), new PropertyMetadata(default));
         #endregion SelectedItems
+
+        #region ColorProperties
+
+        public string ForegroundColor
+        {
+            get { return (string)GetValue(ForegroundColorProperty); }
+            set { SetValue(ForegroundColorProperty, value); }
+        }
+
+        public static readonly DependencyProperty ForegroundColorProperty =
+            DependencyProperty.Register(nameof(ForegroundColor), typeof(string), typeof(SkiaGridViewV2), new PropertyMetadata(default, ForegroundColorChanged));
+
+        private static void ForegroundColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not SkiaGridViewV2 grid)
+                return;
+            grid.SkiaRenderer.SetForeground((string)e.NewValue);
+        }
+
+        public string RowBackground
+        {
+            get { return (string)GetValue(RowBackgroundProperty); }
+            set { SetValue(RowBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty RowBackgroundProperty =
+            DependencyProperty.Register(nameof(RowBackground), typeof(string), typeof(SkiaGridViewV2), new PropertyMetadata(default, RowBackgroundChanged));
+
+        private static void RowBackgroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not SkiaGridViewV2 grid)
+                return;
+            grid.SkiaRenderer.SetRowBackgroundColor((string)e.NewValue);
+        }
+
+        public string? AlternatingRowBackground
+        {
+            get { return (string?)GetValue(AlternatingRowBackgroundProperty); }
+            set { SetValue(AlternatingRowBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty AlternatingRowBackgroundProperty =
+            DependencyProperty.Register(nameof(AlternatingRowBackground), typeof(string), typeof(SkiaGridViewV2), new PropertyMetadata(null, AlternatingRowBackgroundChanged));
+
+        private static void AlternatingRowBackgroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not SkiaGridViewV2 grid)
+                return;
+            grid.SkiaRenderer.SetAlternatingRowBackground((string)e.NewValue);
+        }
+
+        public bool ShowGridLines
+        {
+            get { return (bool)GetValue(ShowGridLinesProperty); }
+            set { SetValue(ShowGridLinesProperty, value); }
+        }
+
+        public static readonly DependencyProperty ShowGridLinesProperty =
+            DependencyProperty.Register(nameof(ShowGridLines), typeof(bool), typeof(SkiaGridViewV2), new PropertyMetadata(false, ShowgGridLineChanged));
+
+        private static void ShowgGridLineChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not SkiaGridViewV2 grid)
+                return;
+            grid.SkiaRenderer.SetGridLinesVisibility((bool)e.NewValue);
+        }
+
+        public string GridLinesColor
+        {
+            get { return (string)GetValue(GridLinesColorProperty); }
+            set { SetValue(GridLinesColorProperty, value); }
+        }
+
+        public static readonly DependencyProperty GridLinesColorProperty =
+            DependencyProperty.Register(nameof(GridLinesColor), typeof(string), typeof(SkiaGridViewV2), new PropertyMetadata(default, GridLinesColorChanged));
+
+        private static void GridLinesColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not SkiaGridViewV2 grid)
+                return;
+            grid.SkiaRenderer.SetGridLinesColor((string)e.NewValue);
+        }
+
+
+        #endregion ColorProperties
 
         #region PrivateMethods
         private void UpdateColumnsInDataGrid()
@@ -324,6 +479,31 @@ namespace SkiaSharpControlV2
                 col.PropertyChanged -= Column_PropertyChanged;
                 col.PropertyChanged += Column_PropertyChanged;
             }
+        }
+
+        private void Group_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is SKGroupDefinition column)
+            {
+                if (e.PropertyName == nameof(SKGroupDefinition.RowBackground))
+                {
+                    SkiaRenderer.SetGroupRowBackgroundColor(column.RowBackground);
+                }
+                if (e.PropertyName == nameof(SKGroupDefinition.ForegroundColor))
+                {
+                    SkiaRenderer.SetGroupFontColor(column.ForegroundColor);
+                }
+            }
+        }
+
+        private void SubscribeToGroupColumnEvents(SKGroupDefinition group)
+        {
+            if (group != null)
+            {
+                group.PropertyChanged -= Group_PropertyChanged;
+                group.PropertyChanged += Group_PropertyChanged;
+            }
+
         }
         private void Column_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -480,7 +660,7 @@ namespace SkiaSharpControlV2
                 {
                     IsGroupHeader = true,
                     GroupName = groupName ?? "",
-                    Item = null,
+                    Item = new { Name = groupName },
                     IsExpanded = isExpended
                 });
 
@@ -499,10 +679,11 @@ namespace SkiaSharpControlV2
         }
         private void UpdateGroupToggle(double x, double y)
         {
-            if (GroupSettings != null)
+            if (GroupSettings != null && TotalRows > 0)
             {
                 //&& (v.y >= y && v.height <= y)
                 var values = GroupToggelDetails.Where(v => (x >= v.Value.x && x <= v.Value.x + v.Value.width) && (y >= v.Value.y && y <= v.Value.y + v.Value.height)).LastOrDefault();
+                ResetGroupToggleValues();
                 if (values.Key != null)
                 {
                     var res = GroupToggelDetails[values.Key];
@@ -593,7 +774,233 @@ namespace SkiaSharpControlV2
             double x = point.X + ScrollOffsetX;
             int clickedColumnIndex = (int)((point.X + ScrollOffsetX));
             UpdateGroupToggle(x, (point.Y + ScrollOffsetY));
+
+            var res = SkiaRenderer.GroupItemSource.Where(x => x.IsExpanded || x.IsGroupHeader).ToList();
+            if (res.Count() == 0)
+                return;
+
+            var s = res;
+
+            if (SelectedItems == null)
+            {
+                SelectedItems = new();
+                SkiaRenderer.UpdateSelectedItems(SelectedItems);
+            }
+
+
+            if (rowIndex > s.Count - 1)
+                return;
+
+            foreach (var item in DataListView.Columns.Where(x => x.Visibility == Visibility.Visible))
+            {
+                x -= item.Width.Value;
+                if (x <= 0)
+                {
+                    OnCellClicked?.Invoke(s[rowIndex].Item, item.Header?.ToString());
+                    break;
+                }
+            }
+            if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && CanUserSelectRows)
+            {
+                if (SelectedItems.Any(x => x.Equals(s[rowIndex].Item)))
+                {
+                    SelectedItems.Remove(s[rowIndex].Item);
+
+                }
+                else
+                {
+                    SelectedItems.Add(s[rowIndex].Item);
+                    lastSelectedRowIndex = rowIndex;
+                }
+            }
+            else if (e.LeftButton == MouseButtonState.Pressed && (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) && CanUserSelectRows)
+            {
+                if (SelectedItems != null && SelectedItems.Count > 0)
+                {
+                    var seletedRow = lastSelectedRowIndex;
+
+                    var lastIndex = s.IndexOf(s[rowIndex]);
+
+                    if (lastIndex < seletedRow)
+                    {
+                        SelectedItems.Clear();
+                        for (int i = lastIndex; i <= seletedRow; i++)
+                        {
+                            SelectedItems.Add(s[i].Item);
+                        }
+                    }
+                    else
+                    {
+                        SelectedItems.Clear();
+                        for (int i = seletedRow; i < lastIndex; i++)
+                        {
+                            SelectedItems.Add(s[i].Item);
+                        }
+                    }
+                }
+
+            }
+            else if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                if (CanUserSelectRows)
+                {
+                    SelectedItems.Clear();
+                    SelectedItems.Add(s[rowIndex].Item);
+                    lastSelectedRowIndex = rowIndex;
+                }
+                OnRowClicked?.Invoke(s[rowIndex].Item);
+            }
+
+            if (e.ClickCount == 2)
+                OnRowDoubleClicked?.Invoke(s[rowIndex].Item);
+            SkiaCanvas.InvalidateVisual();
+            SkiaCanvas.Focus();
         }
+
+        private void SkiaCanvas_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (SkiaRenderer.GroupItemSource == null)
+                return;
+
+            var items = SkiaRenderer.GroupItemSource.Where(x => x.IsExpanded || x.IsGroupHeader).Select(x => x.Item).ToList();
+            if (items.Count == 0)
+                return;
+
+            if (SelectedItems == null || SelectedItems.Count == 0)
+            {
+                return;
+            }
+            bool isShift = (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift));
+
+
+            if (SelectedItems.Count == 1)
+            {
+                _selectionAnchorIndex = lastSelectedRowIndex;
+            }
+
+            int currentIndex = items.IndexOf(SelectedItems.Last());
+
+            if (!isShift)
+                _selectionAnchorIndex = null;
+
+            int firstVisibleRow = Math.Max(0, (int)(ScrollOffsetY / RowHeight));
+            int visibleRowCount = Math.Min((int?)(VerticalScrollViewer?.ViewportSize / RowHeight - 3) ?? 0, TotalRows - firstVisibleRow);
+            // Shift + Up
+            if (isShift && e.Key == Key.Up)
+            {
+                if (currentIndex == 0)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+
+                if (_selectionAnchorIndex == null)
+                    _selectionAnchorIndex = currentIndex;
+
+                if (currentIndex > 0)
+                {
+                    var newIndex = currentIndex - 1;
+                    var newItem = items[newIndex];
+
+                    if (newIndex < _selectionAnchorIndex)
+                        SelectedItems.Add(newItem);
+                    else
+                        SelectedItems.Remove(items[currentIndex]);
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex <= firstVisibleRow)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY - RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+            // Shift + Down
+            else if (isShift && e.Key == Key.Down)
+            {
+                if (currentIndex == items.Count - 1)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+                if (_selectionAnchorIndex == null)
+                    _selectionAnchorIndex = currentIndex;
+
+                if (currentIndex < items.Count - 1)
+                {
+                    var newIndex = currentIndex + 1;
+                    var newItem = items[newIndex];
+
+                    if (newIndex > _selectionAnchorIndex)
+                        SelectedItems.Add(newItem);
+                    else
+                        SelectedItems.Remove(items[currentIndex]);
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex >= firstVisibleRow + visibleRowCount)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY + RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+            // Normal Up (no shift) – move single selection
+            else if (e.Key == Key.Up)
+            {
+                if (currentIndex == 0)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+                if (currentIndex > 0)
+                {
+                    SelectedItems.Clear();
+                    SelectedItems.Add(items[currentIndex - 1]);
+                    _selectionAnchorIndex = currentIndex - 1;
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex <= firstVisibleRow)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY - RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+            // Normal Down (no shift)
+            else if (e.Key == Key.Down)
+            {
+                if (currentIndex == items.Count - 1)
+                {
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    return;
+                }
+                if (currentIndex < items.Count - 1)
+                {
+                    SelectedItems.Clear();
+                    SelectedItems.Add(items[currentIndex + 1]);
+                    _selectionAnchorIndex = currentIndex + 1;
+
+                    e.Handled = true;
+                    Keyboard.Focus(SkiaCanvas);
+                    if (currentIndex >= firstVisibleRow + visibleRowCount)
+                    {
+                        ScrollToVerticalOffset(ScrollOffsetY + RowHeight);
+                    }
+                    SkiaCanvas.InvalidateVisual();
+                }
+            }
+
+
+            OnPreviewKeyDownEvent?.Invoke(e.Key);
+        }
+
         private void DataListView_Sorting(object sender, DataGridSortingEventArgs e)
         {
             e.Handled = false;
@@ -647,6 +1054,11 @@ namespace SkiaSharpControlV2
             catch { }
 
 
+        }
+
+        public void ScrollToVerticalOffset(double offset)
+        {
+            VerticalScrollViewer.Value = offset;
         }
     }
 }

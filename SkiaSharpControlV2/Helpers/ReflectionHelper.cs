@@ -10,7 +10,7 @@ namespace SkiaSharpControlV2.Helpers
         /// <summary>
         /// Reads a property from currentItem using fast compiled reflection and returns value and type.
         /// </summary>
-        public  (string? Value, Type? Type) ReadCurrentItemWithTypes(object? currentItem, string propertyName)
+        internal  (string? Value, Type? Type) ReadCurrentItemWithTypes(object? currentItem, string propertyName)
         {
             if (currentItem == null || string.IsNullOrWhiteSpace(propertyName))
                 return (null, null);
@@ -46,5 +46,6 @@ namespace SkiaSharpControlV2.Helpers
                 return (null, null);
             }
         }
+
     }
 }

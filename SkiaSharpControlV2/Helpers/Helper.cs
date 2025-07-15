@@ -49,6 +49,69 @@ namespace SkiaSharpControlV2.Helpers
             object? val = prop.GetValue(currentItem);
             return (val?.ToString(), prop.PropertyType);
         }
+        public static string ApplyFormat(Type type, string? value, string format, bool showBracketIfNegative = false)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+            Type baseType = Nullable.GetUnderlyingType(type) ?? type;
+
+            try
+            {
+                switch (Type.GetTypeCode(baseType))
+                {
+                    case TypeCode.Double:
+                        return double.TryParse(value, out var dVal)
+                            ? FormatWithBracket(dVal, format, showBracketIfNegative)
+                            : $"[Invalid: {value}]";
+
+                    case TypeCode.Decimal:
+                        return decimal.TryParse(value, out var decVal)
+                            ? FormatWithBracket(decVal, format, showBracketIfNegative)
+                            : $"[Invalid: {value}]";
+
+                    case TypeCode.Single:
+                        return float.TryParse(value, out var fVal)
+                            ? FormatWithBracket(fVal, format, showBracketIfNegative)
+                            : $"[Invalid: {value}]";
+
+                    case TypeCode.Int32:
+                        return int.TryParse(value, out var iVal)
+                            ? FormatWithBracket(iVal, format, showBracketIfNegative)
+                            : $"[Invalid: {value}]";
+
+                    case TypeCode.Int64:
+                        return long.TryParse(value, out var lVal)
+                            ? FormatWithBracket(lVal, format, showBracketIfNegative)
+                            : $"[Invalid: {value}]";
+
+                    case TypeCode.DateTime:
+                        return DateTime.TryParse(value, out var dtVal)
+                            ? dtVal.ToString(format)
+                            : $"[Invalid: {value}]";
+                }
+
+                if (baseType == typeof(TimeSpan))
+                {
+                    return TimeSpan.TryParse(value, out var tsVal)
+                        ? tsVal.ToString(format)
+                        : $"[Invalid: {value}]";
+                }
+
+                return value;
+            }
+            catch
+            {
+                return $"[Invalid: {value}]";
+            }
+        }
+        private static string FormatWithBracket<T>(T number, string format, bool showBracket) where T : struct, IComparable
+        {
+            decimal val = Convert.ToDecimal(number);
+            string formatted = string.IsNullOrWhiteSpace(format) ? val.ToString() : val.ToString(format);
+
+            return showBracket && val < 0 ? $"({formatted.TrimStart('-')})" : formatted;
+        }
+
     }
 
 }
