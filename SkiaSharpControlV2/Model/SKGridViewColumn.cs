@@ -1,10 +1,13 @@
 ﻿using SkiaSharpControlV2.Enum;
+using SkiaSharpControlV2.Helpers;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
+using static SkiaSharp.SKPath;
 
 namespace SkiaSharpControlV2
 {
@@ -157,6 +160,13 @@ namespace SkiaSharpControlV2
         }
         public static readonly DependencyProperty ShowBracketOnNegativeProperty =
             DependencyProperty.Register(nameof(ShowBracketOnNegative), typeof(bool), typeof(SKGridViewColumn), new PropertyMetadata(false));
+        public bool FormatWithAcronym
+        {
+            get => (bool)GetValue(FormatWithAcronymProperty);
+            set => SetValue(FormatWithAcronymProperty, value);
+        }
+        public static readonly DependencyProperty FormatWithAcronymProperty =
+            DependencyProperty.Register(nameof(FormatWithAcronym), typeof(bool), typeof(SKGridViewColumn), new PropertyMetadata(false));
         private static void TriggerChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
         {
             if (s is SKGridViewColumn a) a.OnPropertyChanged(e.Property.ToString());
@@ -221,17 +231,53 @@ namespace SkiaSharpControlV2
     {
         public required string BindingPath { get; set; }
         public required object Value { get; set; }
+
     }
 
     public abstract class SKTrigger
     {
         public ObservableCollection<SKSetter> Setters { get; set; } = new();
+        public abstract bool Evaluate(object dataContext, ReflectionHelper helper);
+        public static bool EvaluateCondition(string? leftStr, Type? leftType, object rightVal, SKOperation op)
+        {
+            if (leftType == null || leftStr == null) return false;
+
+            try
+            {
+                var left = Convert.ChangeType(leftStr, leftType);
+                var right = Convert.ChangeType(rightVal, leftType);
+
+                int cmp = Comparer.DefaultInvariant.Compare(left, right);
+
+                return op switch
+                {
+                    SKOperation.Equals => cmp == 0,
+                    SKOperation.NotEquals => cmp != 0,
+                    SKOperation.GreaterThan => cmp > 0,
+                    SKOperation.LessThan => cmp < 0,
+                    SKOperation.GreaterThanOrEqual => cmp >= 0,
+                    SKOperation.LessThanOrEqual => cmp <= 0,
+                    _ => false
+                };
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
     public class SKDataTrigger : SKTrigger
     {
-        public string Binding { get; set; }
-        public string Operator { get; set; }
+        public string BindingPath { get; set; }
+        public SKOperation Operator { get; set; }
         public object Value { get; set; }
+        public override bool Evaluate(object dataContext, ReflectionHelper helper)
+        {
+            var (strVal, type) = helper.ReadCurrentItemWithTypes(dataContext, BindingPath);
+            if (strVal == null) return false;
+
+            return EvaluateCondition(strVal, type, Value, Operator);
+        }
     }
 
     public class SKGroupToggleSymbol : DependencyObject
@@ -245,6 +291,11 @@ namespace SkiaSharpControlV2
     public class SKMultiTrigger : SKTrigger
     {
         public ObservableCollection<SKCondition> Conditions { get; set; } = new();
+        public override bool Evaluate(object dataContext, ReflectionHelper helper)
+        {
+            return true;
+        }
+
     }
 
     [ContentProperty(nameof(Triggers))]
@@ -260,9 +311,9 @@ namespace SkiaSharpControlV2
         Background,
         Foreground,
         BorderColor,
-        BorderThickness,
-        ContentAlignment,
-        Format,
+        //BorderThickness,
+       // ContentAlignment,
+       // Format,
     }
     public enum SkAggregation
     {
@@ -272,6 +323,15 @@ namespace SkiaSharpControlV2
         Min,
         Max,
         Count,
+    }
+    public enum SKOperation
+    {
+        GreaterThan,
+        LessThan,
+        Equals,
+        NotEquals,
+        GreaterThanOrEqual,
+        LessThanOrEqual,
     }
 
     public class SkGridColumnCollection : ObservableCollection<SKGridViewColumn>

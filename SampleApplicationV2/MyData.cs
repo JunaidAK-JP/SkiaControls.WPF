@@ -55,8 +55,8 @@ namespace SampleApplicationV2
                 list.Add(new MyData
                 {
                     Id = i + 1,
-                    Name = $"Item {rand.Next(1, 100)}",
-                    Price = rand.Next(-10000,10000) ,
+                    Name = $"Item {rand.Next(0, 50)}",
+                    Price = rand.Next(-1000,1000) ,
                     IsActive = rand.Next(2) == 1,
                     CreatedAt = RandomDate(),
                     Description = $"Desc {Guid.NewGuid().ToString()[..8]}",

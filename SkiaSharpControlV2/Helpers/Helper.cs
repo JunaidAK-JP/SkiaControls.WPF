@@ -49,7 +49,7 @@ namespace SkiaSharpControlV2.Helpers
             object? val = prop.GetValue(currentItem);
             return (val?.ToString(), prop.PropertyType);
         }
-        public static string ApplyFormat(Type type, string? value, string format, bool showBracketIfNegative = false)
+        public static string ApplyFormat(Type type, string? value, string format, bool showBracketIfNegative = false, bool showAsAcronym = false)
         {
             if (string.IsNullOrWhiteSpace(value)) return string.Empty;
 
@@ -61,33 +61,37 @@ namespace SkiaSharpControlV2.Helpers
                 {
                     case TypeCode.Double:
                         return double.TryParse(value, out var dVal)
-                            ? FormatWithBracket(dVal, format, showBracketIfNegative)
+                            ? FormatWithAcronym(dVal, format, showBracketIfNegative, showAsAcronym)
                             : $"[Invalid: {value}]";
 
                     case TypeCode.Decimal:
                         return decimal.TryParse(value, out var decVal)
-                            ? FormatWithBracket(decVal, format, showBracketIfNegative)
+                            ? FormatWithAcronym(decVal, format, showBracketIfNegative, showAsAcronym)
                             : $"[Invalid: {value}]";
 
                     case TypeCode.Single:
                         return float.TryParse(value, out var fVal)
-                            ? FormatWithBracket(fVal, format, showBracketIfNegative)
+                            ? FormatWithAcronym(fVal, format, showBracketIfNegative, showAsAcronym)
                             : $"[Invalid: {value}]";
 
                     case TypeCode.Int32:
                         return int.TryParse(value, out var iVal)
-                            ? FormatWithBracket(iVal, format, showBracketIfNegative)
+                            ? FormatWithAcronym(iVal, format, showBracketIfNegative, showAsAcronym)
                             : $"[Invalid: {value}]";
 
                     case TypeCode.Int64:
                         return long.TryParse(value, out var lVal)
-                            ? FormatWithBracket(lVal, format, showBracketIfNegative)
+                            ? FormatWithAcronym(lVal, format, showBracketIfNegative, showAsAcronym)
                             : $"[Invalid: {value}]";
 
                     case TypeCode.DateTime:
                         return DateTime.TryParse(value, out var dtVal)
                             ? dtVal.ToString(format)
                             : $"[Invalid: {value}]";
+
+                    case TypeCode.String:
+                    case TypeCode.Char:
+                        return value;
                 }
 
                 if (baseType == typeof(TimeSpan))
@@ -104,6 +108,44 @@ namespace SkiaSharpControlV2.Helpers
                 return $"[Invalid: {value}]";
             }
         }
+        private static string FormatWithAcronym<T>(T number, string format, bool showBracket, bool showAsAcronym) where T : struct, IComparable
+        {
+            decimal val = Convert.ToDecimal(number);
+
+            if (showAsAcronym)
+            {
+                string suffix;
+                decimal shortVal;
+
+                if (Math.Abs(val) >= 1_000_000_000)
+                {
+                    shortVal = val / 1_000_000_000;
+                    suffix = "B";
+                }
+                else if (Math.Abs(val) >= 1_000_000)
+                {
+                    shortVal = val / 1_000_000;
+                    suffix = "M";
+                }
+                else if (Math.Abs(val) >= 1_000)
+                {
+                    shortVal = val / 1_000;
+                    suffix = "K";
+                }
+                else
+                {
+                    return FormatWithBracket(val, format, showBracket);
+                }
+
+                string formatted = string.IsNullOrWhiteSpace(format) ? shortVal.ToString("0.#") : shortVal.ToString(format);
+                string result = $"{formatted}{suffix}";
+
+                return showBracket && val < 0 ? $"({result.TrimStart('-')})" : result;
+            }
+
+            return FormatWithBracket(val, format, showBracket);
+        }
+
         private static string FormatWithBracket<T>(T number, string format, bool showBracket) where T : struct, IComparable
         {
             decimal val = Convert.ToDecimal(number);

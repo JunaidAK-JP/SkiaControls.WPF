@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace SkiaSharpControlV2.Helpers
 {
-    internal class ReflectionHelper
+    public class ReflectionHelper
     {
         private  readonly Dictionary<(Type, string), Func<object, object?>> _getterCache = new();
 
@@ -46,6 +46,7 @@ namespace SkiaSharpControlV2.Helpers
                 return (null, null);
             }
         }
+
 
     }
 }
