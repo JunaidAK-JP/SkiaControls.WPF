@@ -1,4 +1,5 @@
 ﻿
+using SkiaSharpControlV2.Enum;
 using System.Windows;
 
 using System.Windows.Threading;
@@ -22,6 +23,15 @@ namespace SampleApplicationV2
                 skiaGrid.Refresh();
             };
             timer.Start();
+        }
+
+        private void CopyAllData_Click(object sender, RoutedEventArgs e)
+        {
+           Clipboard.SetText(skiaGrid.ExportData(SKExportType.All));
+        }
+        private void CopySelectedData_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(skiaGrid.ExportData(SKExportType.Selected));
         }
     }
 }

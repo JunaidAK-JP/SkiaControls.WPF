@@ -22,6 +22,8 @@ namespace SkiaSharpControls
 
         private readonly List<SkGridViewColumn> _visibleColumnsCache = new();
 
+       
+
         private SKPaint SelectedRowBackgroundHighlighting = new SKPaint() { Color = SKColor.Parse("#0072C6"), IsAntialias = true };
         private SKPaint SelectedRowTextColor = new SKPaint { Color = SKColors.White, StrokeWidth = 1 };
         private SKPaint DefaultLinePaint = new SKPaint { Color = SKColors.White, StrokeWidth = 1 };
@@ -36,6 +38,7 @@ namespace SkiaSharpControls
         {
             SelectedItems = selectedItems;
         }
+        
 
         public void SetScrollBars(ScrollBar horizontalScrollViewer, ScrollBar verticalScrollViewer)
         {

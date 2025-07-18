@@ -143,7 +143,14 @@ namespace SkiaSharpControlV2
         public static readonly DependencyProperty CellTemplateProperty =
             DependencyProperty.Register(nameof(CellTemplate), typeof(SKCellTemplate), typeof(SKGridViewColumn), new PropertyMetadata(null));
 
-        public int DisplayIndex { get; set; }
+
+        public int? DisplayIndex
+        {
+            get => (int?)GetValue(DisplayIndexProperty);
+            set => SetValue(DisplayIndexProperty, value);
+        }
+        public static readonly DependencyProperty DisplayIndexProperty =
+            DependencyProperty.Register(nameof(DisplayIndex), typeof(int?), typeof(SKGridViewColumn), new PropertyMetadata(null, (s, e) => TriggerChanged(s, e)));
 
         public string? Format
         {
@@ -230,6 +237,7 @@ namespace SkiaSharpControlV2
     public class SKCondition
     {
         public required string BindingPath { get; set; }
+        public required SKOperation Operator { get; set; }
         public required object Value { get; set; }
 
     }
@@ -293,6 +301,14 @@ namespace SkiaSharpControlV2
         public ObservableCollection<SKCondition> Conditions { get; set; } = new();
         public override bool Evaluate(object dataContext, ReflectionHelper helper)
         {
+            foreach (var item in Conditions)
+            {
+                var (strVal, type) = helper.ReadCurrentItemWithTypes(dataContext, item.BindingPath);
+                if (strVal == null) return false;
+
+                var res=  EvaluateCondition(strVal, type,item.Value, item.Operator);
+                if (!res) return false;
+            }
             return true;
         }
 
@@ -300,6 +316,13 @@ namespace SkiaSharpControlV2
 
     [ContentProperty(nameof(Triggers))]
     public class SKCellTemplate
+    {
+        public ObservableCollection<SKSetter> Setters { get; set; } = new(); // Can be SKSetter or SKMultiSetter
+        public ObservableCollection<SKTrigger> Triggers { get; set; } = new(); // Can be SKDataTrigger or SKMultiTrigger
+    }
+
+    [ContentProperty(nameof(Triggers))]
+    public class SKRowTemplate
     {
         public ObservableCollection<SKSetter> Setters { get; set; } = new(); // Can be SKSetter or SKMultiSetter
         public ObservableCollection<SKTrigger> Triggers { get; set; } = new(); // Can be SKDataTrigger or SKMultiTrigger

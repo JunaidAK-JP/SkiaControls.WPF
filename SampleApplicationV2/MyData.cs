@@ -136,6 +136,17 @@ namespace SampleApplicationV2
             }
         }
 
+        private int? displayIndex = null;
+        public int? DisplayIndex
+        {
+            get => displayIndex;
+            set
+            {
+                displayIndex = value;
+                OnPropertyChanged(nameof(DisplayIndex));
+            }
+        }
+
         private string? backColor ;
         public string? BackColor
         {

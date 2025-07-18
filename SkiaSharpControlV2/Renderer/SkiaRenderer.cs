@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -37,7 +38,7 @@ namespace SkiaSharpControlV2.Renderer
         private ScrollBar? VerticalScrollViewer { get; set; }
         private bool ShowGridLines { get; set; }
 
-
+        private bool IsWindowActive = false;
 
         private readonly List<SKGridViewColumn> _visibleColumnsCache = new();
         private SKPaint SelectedRowBackgroundHighlighting = new SKPaint() { Color = SKColor.Parse("#0072C6"), IsAntialias = true };
@@ -58,7 +59,10 @@ namespace SkiaSharpControlV2.Renderer
         {
             Items = items;
         }
-
+        public void SetWindowActive(bool isWindowActive)
+        {
+            IsWindowActive = isWindowActive;
+        }
 
         public void UpdateSelectedItems(IEnumerable selectedItems)
         {
@@ -117,6 +121,8 @@ namespace SkiaSharpControlV2.Renderer
             else
                 AlternatingRowBackground = new SKPaint { Color = SKColor.Parse(color), StrokeWidth = 1, IsAntialias = true };
         }
+
+
         public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, float rowHeight, int totalRows)
         {
             int firstVisibleRow = Math.Max(0, (int)(scrollOffsetY / rowHeight));
@@ -231,10 +237,30 @@ namespace SkiaSharpControlV2.Renderer
                             var value = reflectionHelper.ReadCurrentItemWithTypes(GroupItems[row].Item, visibleColumns[colIndex].BindingPath);
                             var val = Helper.ApplyFormat(value.Type, value.Value, visibleColumns[colIndex].Format, visibleColumns[colIndex].ShowBracketOnNegative, visibleColumns[colIndex].FormatWithAcronym);
 
+                            var defaultRowtemplate = GetSetterValues(CurrentContext?.RowTemplate?.Setters);
+                            SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? CellBackgroundColor;
+                            SKPaint Foregroundcolor = defaultRowtemplate.Foregroundcolor ?? FontColor;
+                            SKPaint BorderColor = null;
+
+                            var defaultrowtriggerTemplate = GetTriggerTemplate(GroupItems[row].Item, reflectionHelper, CurrentContext?.RowTemplate?.Triggers);
+                            BackgroundColor = defaultrowtriggerTemplate.BackgroundColor ?? BackgroundColor;
+                            Foregroundcolor = defaultrowtriggerTemplate.Foregroundcolor ?? Foregroundcolor;
+                            BorderColor = null;
+
+                            var defaultcelltemplate = GetSetterValues(CurrentContext?.CellTemplate?.Setters);
+                            BackgroundColor = defaultcelltemplate.BackgroundColor ?? BackgroundColor;
+                            Foregroundcolor = defaultcelltemplate.Foregroundcolor ?? Foregroundcolor;
+                            BorderColor = defaultcelltemplate.BorderColor ?? BorderColor;
+
+                            var defaulttriggerTemplate = GetTriggerTemplate(GroupItems[row].Item, reflectionHelper, CurrentContext?.CellTemplate?.Triggers);
+                            BackgroundColor = defaulttriggerTemplate.BackgroundColor ?? BackgroundColor;
+                            Foregroundcolor = defaulttriggerTemplate.Foregroundcolor ?? Foregroundcolor;
+                            BorderColor = defaulttriggerTemplate.BorderColor ?? BorderColor;
+
                             var celltemplate = GetSetterValues(visibleColumns[colIndex]?.CellTemplate?.Setters);
-                            SKPaint BackgroundColor = celltemplate.BackgroundColor ?? CellBackgroundColor;
-                            SKPaint Foregroundcolor = celltemplate.Foregroundcolor ?? FontColor;
-                            SKPaint BorderColor = celltemplate.BorderColor;
+                            BackgroundColor = celltemplate.BackgroundColor ?? BackgroundColor;
+                            Foregroundcolor = celltemplate.Foregroundcolor ?? Foregroundcolor;
+                            BorderColor = celltemplate.BorderColor ?? BorderColor;
 
                             var triggerTemplate = GetTriggerTemplate(GroupItems[row].Item, reflectionHelper, visibleColumns[colIndex].CellTemplate?.Triggers);
                             BackgroundColor = triggerTemplate.BackgroundColor ?? BackgroundColor;
@@ -247,9 +273,46 @@ namespace SkiaSharpControlV2.Renderer
                     }
                     else
                     {
-                        var value = reflectionHelper.ReadCurrentItemWithTypes(item, visibleColumns[colIndex].BindingPath); ;
+                        var CurrentColumns = visibleColumns[colIndex];
+                        var value = reflectionHelper.ReadCurrentItemWithTypes(item, CurrentColumns.BindingPath);
+                        var val = Helper.ApplyFormat(value.Type, value.Value, CurrentColumns.Format, CurrentColumns.ShowBracketOnNegative, CurrentColumns.FormatWithAcronym);
+
+                        var defaultRowtemplate = GetSetterValues(CurrentContext?.RowTemplate?.Setters);
+                        SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? CellBackgroundColor;
+                        SKPaint Foregroundcolor = defaultRowtemplate.Foregroundcolor ?? FontColor;
+                        SKPaint BorderColor = null;
+
+                        var defaultrowtriggerTemplate = GetTriggerTemplate(item, reflectionHelper, CurrentContext?.RowTemplate?.Triggers);
+                        BackgroundColor = defaultrowtriggerTemplate.BackgroundColor ?? BackgroundColor;
+                        Foregroundcolor = defaultrowtriggerTemplate.Foregroundcolor ?? Foregroundcolor;
+                        BorderColor = null;
+
+                        var defaultcelltemplate = GetSetterValues(CurrentContext?.CellTemplate?.Setters);
+                        BackgroundColor = defaultcelltemplate.BackgroundColor ?? BackgroundColor;
+                        Foregroundcolor = defaultcelltemplate.Foregroundcolor ?? Foregroundcolor;
+                        BorderColor = defaultcelltemplate.BorderColor ?? BorderColor;
+
+                        var defaulttriggerTemplate = GetTriggerTemplate(item, reflectionHelper, CurrentContext?.CellTemplate?.Triggers);
+                        BackgroundColor = defaulttriggerTemplate.BackgroundColor ?? BackgroundColor;
+                        Foregroundcolor = defaulttriggerTemplate.Foregroundcolor ?? Foregroundcolor;
+                        BorderColor = defaulttriggerTemplate.BorderColor ?? BorderColor;
+
+                        var celltemplate = GetSetterValues(CurrentColumns?.CellTemplate?.Setters);
+                        BackgroundColor = celltemplate.BackgroundColor ?? BackgroundColor;
+                        Foregroundcolor = celltemplate.Foregroundcolor ?? Foregroundcolor;
+                        BorderColor = celltemplate.BorderColor ?? BorderColor;
+
+                        var triggerTemplate = GetTriggerTemplate(item, reflectionHelper, CurrentColumns.CellTemplate?.Triggers);
+                        BackgroundColor = triggerTemplate.BackgroundColor ?? BackgroundColor;
+                        Foregroundcolor = triggerTemplate.Foregroundcolor ?? Foregroundcolor;
+                        BorderColor = triggerTemplate.BorderColor ?? BorderColor;
+
                         CellContentAlignment cellContentAlignment = visibleColumns[colIndex].ContentAlignment;
-                        Draw(canvas, colIndex, row, value!.Value!, FontColor, SymbolFont, CellBackgroundColor, null, GVColumnWidth, currentX, currentY, cellContentAlignment, rowHeight, HighlightSelected(item));
+                        Draw(canvas, colIndex, row, val, Foregroundcolor, SymbolFont, BackgroundColor, BorderColor, GVColumnWidth, currentX, currentY, cellContentAlignment, rowHeight, HighlightSelected(item));
+                        if (defaultRowtemplate.BorderColor != null || defaultrowtriggerTemplate.BorderColor != null)
+                        {
+                            DrawBorder(canvas, defaultrowtriggerTemplate.BorderColor ?? defaultRowtemplate.BorderColor, (float)columnSum, currentX1, currentY, rowHeight);
+                        }
                     }
 
                     if (ShowGridLines)
@@ -277,13 +340,13 @@ namespace SkiaSharpControlV2.Renderer
         }
         private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, SKPaint? borderColor, float width, float x, float y, CellContentAlignment cellContentAlignment, float rowHeight, bool isselectedrow)
         {
-            var rowBackColor = isselectedrow ? SelectedRowBackgroundHighlighting : backColor;
-            var rowTextColor = isselectedrow ? SelectedRowTextColor : fontcolor;
+            var rowBackColor = (isselectedrow && IsWindowActive) ? SelectedRowBackgroundHighlighting : backColor;
+            var rowTextColor = (isselectedrow && IsWindowActive) ? SelectedRowTextColor : fontcolor;
 
             DrawRect(canvas, rowIndex, x, y, rowBackColor, width, rowHeight);
 
 
-            if (borderColor != null && !isselectedrow)
+            if (borderColor != null && !(isselectedrow && IsWindowActive))
             {
                 DrawBorder2(canvas, borderColor, width, x, y, rowHeight);
             }
@@ -463,6 +526,39 @@ namespace SkiaSharpControlV2.Renderer
             }
             return (backgroundColor, foregroundcolor, borderColor);
         }
+        public string ExportData(SKExportType exportType)
+        {
+            if (_visibleColumnsCache == null || Items == null)
+                return "";
+
+            var columns = _visibleColumnsCache
+                            .Where(c => c.IsVisible)
+                            .OrderBy(c => c.DisplayIndex)
+                            .ToList();
+
+            StringBuilder sb = new();
+
+            // Header
+            sb.AppendLine(string.Join("\t", columns.Select(c => c.Header)));
+
+            var items = exportType == SKExportType.Selected ? SelectedItems.Cast<object>() : Items.Cast<object>();
+            // Rows
+            foreach (var item in items)
+            {
+                List<string> row = new();
+
+                foreach (var col in columns)
+                {
+                    var val = string.IsNullOrEmpty(col.BindingPath) ? ("", null) : reflectionHelper.ReadCurrentItemWithTypes(item, col.BindingPath);
+                    var formatted = Helper.ApplyFormat(val.Type, val.Value, col.Format, col.ShowBracketOnNegative, col.FormatWithAcronym);
+                    row.Add(formatted);
+                }
+
+                sb.AppendLine(string.Join("\t", row));
+            }
+            return sb.ToString();
+        }
+
 
 
     }

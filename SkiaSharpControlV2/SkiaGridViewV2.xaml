@@ -84,7 +84,7 @@
     </UserControl.Resources>
     <!-- LostFocus="SkiaCanvas_LostFocus" MouseDown="MainGrid_MouseDown"-->
 
-    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel"  MouseDown="MainGrid_MouseDown">
+    <Grid x:Name="MainGrid" MouseWheel="MainGrid_MouseWheel"  MouseDown="MainGrid_MouseDown" LostFocus="MainGrid_LostFocus">
         <!-- Custom Scroll Bar -->
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -122,7 +122,7 @@
 
 
         <!--PreviewMouseDown="skiaContainer_PreviewMouseDown"-->
-        <StackPanel   Background="Transparent"  x:Name="skiaContainer"  Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+        <StackPanel   Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
             <skia:SKElement  
                 x:Name="SkiaCanvas" 
                 Focusable="True"
