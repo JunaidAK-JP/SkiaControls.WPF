@@ -91,7 +91,7 @@ namespace SkiaSharpControlV2
                 SkiaRenderer.UpdateVisibleColumns();
                 SkiaRenderer.SetGridLinesVisibility(ShowGridLines);
                 SkiaRenderer.SetScrollBars(HorizontalScrollViewer, VerticalScrollViewer);
-                SkiaRenderer.SetFont("Tahoma", 12);
+                SkiaRenderer.SetFont(Font);
                 SkiaRenderer.SetGridLinesColor(GridLinesColor);
                 SkiaRenderer.SetForeground(ForegroundColor);
                 SkiaRenderer.SetRowBackgroundColor(RowBackground);
@@ -125,8 +125,7 @@ namespace SkiaSharpControlV2
         }
         private void ParentWindow_Deactivated(object? sender, EventArgs e)
         {
-            
-            SkiaRenderer.SetWindowActive(RetainSelectionOnLFocusLost ? true :false);
+            SkiaRenderer.SetWindowActive(RetainSelectionOnLFocusLost ? true : false);
 
         }
 
@@ -433,6 +432,9 @@ namespace SkiaSharpControlV2
                 skGridView.DataListView.CanUserSortColumns = (bool)e.NewValue;
             }
         }
+
+
+
 
         public SKFont? Font
         {

@@ -23,6 +23,7 @@ namespace SampleApplicationV2
                 skiaGrid.Refresh();
             };
             timer.Start();
+            skiaGrid.Font = new SkiaSharp.SKFont(SkiaSharp.SKTypeface.FromFamilyName("Arial"), 18);
         }
 
         private void CopyAllData_Click(object sender, RoutedEventArgs e)

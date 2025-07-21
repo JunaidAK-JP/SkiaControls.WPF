@@ -38,7 +38,7 @@ namespace SkiaSharpControlV2.Renderer
         private ScrollBar? VerticalScrollViewer { get; set; }
         private bool ShowGridLines { get; set; }
 
-        private bool IsWindowActive = false;
+        private bool IsWindowActive = true;
 
         private readonly List<SKGridViewColumn> _visibleColumnsCache = new();
         private SKPaint SelectedRowBackgroundHighlighting = new SKPaint() { Color = SKColor.Parse("#0072C6"), IsAntialias = true };
@@ -83,10 +83,11 @@ namespace SkiaSharpControlV2.Renderer
             Group = group;
         }
 
-        public void SetFont(string fontName, double fontSize)
+        public void SetFont(SKFont? font)
         {
-            SymbolFont.Typeface = SKTypeface.FromFamilyName(fontName);
-            SymbolFont.Size = (float)fontSize;
+            if (font != null)
+                SymbolFont = font;
+
         }
         public void SetGridLinesVisibility(bool showGridLines)
         {
@@ -184,10 +185,10 @@ namespace SkiaSharpControlV2.Renderer
                 for (int colIndex = firstVisibleCol; colIndex < visibleColCount; colIndex++)
                 {
                     float GVColumnWidth = (float)visibleColumns[colIndex].Width;
-
+                    var rowcolor = row % 2 == 0 ? RowBackgroundColor : AlternatingRowBackground ?? RowBackgroundColor;
                     if (GroupItems != null)
                     {
-                        var rowcolor = row % 2 == 0 ? RowBackgroundColor : AlternatingRowBackground ?? RowBackgroundColor;
+
                         if (GroupItems[row].IsGroupHeader)
                         {
                             string value = Convert.ToString(GroupItems[row]?.GroupName!);
@@ -238,7 +239,7 @@ namespace SkiaSharpControlV2.Renderer
                             var val = Helper.ApplyFormat(value.Type, value.Value, visibleColumns[colIndex].Format, visibleColumns[colIndex].ShowBracketOnNegative, visibleColumns[colIndex].FormatWithAcronym);
 
                             var defaultRowtemplate = GetSetterValues(CurrentContext?.RowTemplate?.Setters);
-                            SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? CellBackgroundColor;
+                            SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? rowcolor;
                             SKPaint Foregroundcolor = defaultRowtemplate.Foregroundcolor ?? FontColor;
                             SKPaint BorderColor = null;
 
@@ -278,7 +279,7 @@ namespace SkiaSharpControlV2.Renderer
                         var val = Helper.ApplyFormat(value.Type, value.Value, CurrentColumns.Format, CurrentColumns.ShowBracketOnNegative, CurrentColumns.FormatWithAcronym);
 
                         var defaultRowtemplate = GetSetterValues(CurrentContext?.RowTemplate?.Setters);
-                        SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? CellBackgroundColor;
+                        SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? rowcolor;
                         SKPaint Foregroundcolor = defaultRowtemplate.Foregroundcolor ?? FontColor;
                         SKPaint BorderColor = null;
 
@@ -340,6 +341,7 @@ namespace SkiaSharpControlV2.Renderer
         }
         private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, SKPaint? borderColor, float width, float x, float y, CellContentAlignment cellContentAlignment, float rowHeight, bool isselectedrow)
         {
+           
             var rowBackColor = (isselectedrow && IsWindowActive) ? SelectedRowBackgroundHighlighting : backColor;
             var rowTextColor = (isselectedrow && IsWindowActive) ? SelectedRowTextColor : fontcolor;
 

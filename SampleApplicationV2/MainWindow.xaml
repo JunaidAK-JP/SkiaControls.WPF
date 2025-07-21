@@ -68,7 +68,7 @@
 
         <Grid Grid.Row="1">
             <skia:SkiaGridViewV2 ItemsSource="{Binding Items}" 
-                                 ShowGridLines="False"
+                                 ShowGridLines="True"
                                  GridLinesColor="#000000"
                                  RowBackground="#ffffff"
                                  AlternatingRowBackground="#F0F0F0"
