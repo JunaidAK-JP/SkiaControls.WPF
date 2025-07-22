@@ -978,7 +978,9 @@ namespace SkiaSharpControls
 
         public void Refresh()
         {
-            TotalRows = ItemsSource.Cast<object>().Count();
+            if (ItemsSource != null)
+                TotalRows = ItemsSource.Cast<object>().Count();
+
             UpdateValues();
             SkiaCanvas.InvalidateVisual();
         }
@@ -1071,30 +1073,37 @@ namespace SkiaSharpControls
 
         private void UpdateValues()
         {
-            SkiaCanvas.Height = GetSkiaHeight(TotalRows);
-            SkiaCanvas.Width = GetSkiaWidth();
-            var TotalColsVisible = DataListView.Columns.Where(x => x.Visibility == Visibility.Visible).Select(x => x.Width.Value);
-            ColWidth = (float)(TotalColsVisible.Sum() / (TotalColsVisible.Count() - 1));
-
-            TotalCols = 0;
-
-            HorizontalScrollViewer.Minimum = 0;
-            HorizontalScrollViewer.ViewportSize = MainGrid.ActualWidth;
-            HorizontalScrollViewer.Maximum = (TotalColsVisible.Sum() + 10) - MainGrid.ActualWidth + 10;
-
-            VerticalScrollViewer.Minimum = 0;
-            VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
-            VerticalScrollViewer.Maximum = ((TotalRows + 3.3) * rowHeight) - MainGrid.ActualHeight;
-
-            PresentationSource source = PresentationSource.FromVisual(this);
-            if (source != null)
+            try
             {
-                var res = source.CompositionTarget.TransformToDevice.M11;
-                DpiScalling = (float)res;
+                SkiaCanvas.Height = GetSkiaHeight(TotalRows);
+                SkiaCanvas.Width = GetSkiaWidth();
+                var TotalColsVisible = DataListView.Columns.Where(x => x.Visibility == Visibility.Visible).Select(x => x.Width.Value);
+                ColWidth = (float)(TotalColsVisible.Sum() / (TotalColsVisible.Count() - 1));
+
+                TotalCols = 0;
+
+                HorizontalScrollViewer.Minimum = 0;
+                HorizontalScrollViewer.ViewportSize = MainGrid.ActualWidth;
+                HorizontalScrollViewer.Maximum = (TotalColsVisible.Sum() + 10) - MainGrid.ActualWidth + 10;
+
+                VerticalScrollViewer.Minimum = 0;
+                VerticalScrollViewer.ViewportSize = MainGrid.ActualHeight;
+                VerticalScrollViewer.Maximum = ((TotalRows + 3.3) * rowHeight) - MainGrid.ActualHeight;
+
+                PresentationSource source = PresentationSource.FromVisual(this);
+                if (source != null)
+                {
+                    var res = source.CompositionTarget.TransformToDevice.M11;
+                    DpiScalling = (float)res;
+                }
+                else
+                {
+                    DpiScalling = GetSystemDpi();
+                }
             }
-            else
+            catch (Exception)
             {
-                DpiScalling = GetSystemDpi();
+                //Handle Exception
             }
         }
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
