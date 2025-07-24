@@ -203,7 +203,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty RowBackgroundProperty =
-            DependencyProperty.Register(nameof(RowBackground), typeof(string), typeof(SKGroupDefinition), new PropertyMetadata(default,(s, e) => TriggerChanged(s, e)));
+            DependencyProperty.Register(nameof(RowBackground), typeof(string), typeof(SKGroupDefinition), new PropertyMetadata(default, (s, e) => TriggerChanged(s, e)));
 
         public string? GroupBy { get; set; }
         public string? Target { get; set; }
@@ -232,13 +232,30 @@ namespace SkiaSharpControlV2
     public class SKSetter : DependencyObject
     {
         public required SkStyleProperty Property { get; set; }
-        public required object Value { get; set; }
+
+        public string ValuePath { get; set; }
+
+        public object Value
+        {
+            get => GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
+        }
+        public static readonly DependencyProperty ValueProperty =
+       DependencyProperty.Register(nameof(Value), typeof(object), typeof(SKSetter), new PropertyMetadata(null));
     }
-    public class SKCondition
+    public class SKCondition : DependencyObject
     {
         public required string BindingPath { get; set; }
         public required SKOperation Operator { get; set; }
-        public required object Value { get; set; }
+        
+
+        public object Value
+        {
+            get => GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
+        }
+        public static readonly DependencyProperty ValueProperty =
+        DependencyProperty.Register(nameof(Value), typeof(object), typeof(SKCondition), new PropertyMetadata(null));
 
     }
 
@@ -291,10 +308,10 @@ namespace SkiaSharpControlV2
     public class SKGroupToggleSymbol : DependencyObject
     {
         public string? TargetColumns { get; set; }
-        public string? Expand { get; set; } 
-        public string? Collapse { get; set; } 
+        public string? Expand { get; set; }
+        public string? Collapse { get; set; }
     }
-    
+
 
     public class SKMultiTrigger : SKTrigger
     {
@@ -306,7 +323,7 @@ namespace SkiaSharpControlV2
                 var (strVal, type) = helper.ReadCurrentItemWithTypes(dataContext, item.BindingPath);
                 if (strVal == null) return false;
 
-                var res=  EvaluateCondition(strVal, type,item.Value, item.Operator);
+                var res = EvaluateCondition(strVal, type, item.Value, item.Operator);
                 if (!res) return false;
             }
             return true;
@@ -335,8 +352,8 @@ namespace SkiaSharpControlV2
         Foreground,
         BorderColor,
         //BorderThickness,
-       // ContentAlignment,
-       // Format,
+        // ContentAlignment,
+        // Format,
     }
     public enum SkAggregation
     {
@@ -357,7 +374,7 @@ namespace SkiaSharpControlV2
         LessThanOrEqual,
     }
 
-    public class SkGridColumnCollection : ObservableCollection<SKGridViewColumn>
+    public class SkGridColumnCollection : List<SKGridViewColumn>
     {
     }
 

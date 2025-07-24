@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 
 namespace SampleApplicationV2
@@ -14,9 +15,24 @@ namespace SampleApplicationV2
         {
             Columns = new Columns();
 
-            Items = new ObservableCollection<MyData>(RandomDataGenerator.Generate(1000));
+            Items = new ObservableCollection<MyData>(RandomDataGenerator.Generate(1));
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(250);
+            timer.Tick += (s, e) =>
+            {
 
-           
+                foreach (var item in RandomDataGenerator.Generate(50))
+                {
+                    if (Items.Count >= 150)
+                    {
+                       // Items.RemoveAt(Items.Count - 1);
+                    }
+                    item.Description = null;
+                    Items.Insert(0, item);
+                }
+                
+            };
+            timer.Start();
         }
      
 

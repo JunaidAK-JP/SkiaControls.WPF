@@ -1,6 +1,7 @@
 ﻿
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -153,7 +154,13 @@ namespace SkiaSharpControlV2.Helpers
 
             return showBracket && val < 0 ? $"({formatted.TrimStart('-')})" : formatted;
         }
-
+        public static bool IsFontInstalled(string fontName)
+        {
+            using (InstalledFontCollection fontsCollection = new InstalledFontCollection())
+            {
+                return fontsCollection.Families.Any(f => string.Equals(f.Name, fontName, StringComparison.OrdinalIgnoreCase));
+            }
+        }
     }
 
 }

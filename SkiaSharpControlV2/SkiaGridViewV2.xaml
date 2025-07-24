@@ -61,7 +61,7 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ContentHeader" Text="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" Width="{TemplateBinding Width}" TextAlignment="Left" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                                <TextBlock x:Name="ContentHeader" Text="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" Width="{TemplateBinding Width}" TextAlignment="Left" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
                                 <!--<Path x:Name="SortArrow" Grid.Column="1" Margin="0,0,5,0" Fill="White" VerticalAlignment="Center" HorizontalAlignment="Center" />-->
                                 <TextBlock x:Name="SortArrow" Grid.Column="1"  Foreground="White" VerticalAlignment="Center" FontSize="{Binding ElementName=ContentHeader, Path=FontSize}" HorizontalAlignment="Center" />
                                 <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left"/>
@@ -115,13 +115,6 @@
                   
                   >
         </DataGrid>
-
-        <!--Sorting="DataListView_Sorting"
-           LayoutUpdated="DataListView_LayoutUpdated"
-           ColumnReordered="DataListView_ColumnReordered"-->
-
-
-        <!--PreviewMouseDown="skiaContainer_PreviewMouseDown"-->
         <StackPanel   Background="Transparent"  x:Name="skiaContainer" PreviewMouseDown="skiaContainer_PreviewMouseDown" Grid.Row="1"  Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
             <skia:SKElement  
                 x:Name="SkiaCanvas" 
@@ -135,9 +128,6 @@
                 KeyDown="SkiaCanvas_KeyDown"
                 />
         </StackPanel>
-        <!--MouseRightButtonDown="SkiaCanvas_MouseRightButtonDown"
-                KeyDown="SkiaCanvas_KeyDown"
-                MouseLeftButtonDown="SkiaCanvas_MouseLeftButtonDown"-->
         <ScrollBar 
             x:Name="VerticalScrollViewer"
             Grid.RowSpan="2"
@@ -151,7 +141,6 @@
             VirtualizingPanel.VirtualizationMode="Recycling"
             ValueChanged="VerticalScrollViewer_ValueChanged"
             />
-        <!---->
         <ScrollBar 
             x:Name="HorizontalScrollViewer"
             Grid.Row="2"
@@ -165,6 +154,5 @@
             VirtualizingPanel.VirtualizationMode="Recycling"
             ValueChanged="HorizontalScrollViewer_ValueChanged"
             />
-        <!---->
     </Grid>
 </UserControl>

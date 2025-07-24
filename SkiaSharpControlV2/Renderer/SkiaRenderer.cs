@@ -3,33 +3,29 @@ using SkiaSharp;
 using SkiaSharpControlV2.Enum;
 using SkiaSharpControlV2.Helpers;
 using SkiaSharpControlV2.Model;
-using System;
 using System.Collections;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Data.Common;
-using System.Linq.Expressions;
-using System.Reflection;
+using System.Drawing.Text;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
+
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using Windows.Foundation.Collections;
-using static SkiaSharp.SKPath;
+
 
 namespace SkiaSharpControlV2.Renderer
 {
-    public class SkiaRenderer
+    public class SkiaRenderer : IDisposable
     {
         public SkiaRenderer(SkiaGridViewV2 CurrentContext)
         {
             this.CurrentContext = CurrentContext;
+
         }
         private SkiaGridViewV2 CurrentContext;
         private ReflectionHelper reflectionHelper = new();
-        private SKFont SymbolFont { get; set; } = new() { Size = 12, Typeface = SKTypeface.FromFile("TypeFaces\\seguisym.ttf") };
+        private SKFont SymbolFont { get; set; } = new() { Size = 12, Typeface = SKTypeface.FromFamilyName("Arial") };
+        private string FontFamily { get; set; } = "Arial";
+        private string FontStyle { get; set; } = "Normal";
+        private float FontSize { get; set; } = 12;
         private ICollectionView? Items { get; set; }
         private IEnumerable? SelectedItems { get; set; }
         private IEnumerable<SKGridViewColumn>? Columns { get; set; } = [];
@@ -53,7 +49,6 @@ namespace SkiaSharpControlV2.Renderer
 
         private SKPaint CellBackgroundColor = new SKPaint { Color = SKColors.White, StrokeWidth = 1, IsAntialias = true };
         private SKPaint CellBorderColor = new SKPaint { Color = SKColors.Green, StrokeWidth = 1, IsAntialias = true };
-
         public List<GroupModel> GroupItemSource { get; set; } = new();
         public void UpdateItems(ICollectionView items)
         {
@@ -63,7 +58,6 @@ namespace SkiaSharpControlV2.Renderer
         {
             IsWindowActive = isWindowActive;
         }
-
         public void UpdateSelectedItems(IEnumerable selectedItems)
         {
             SelectedItems = selectedItems;
@@ -73,7 +67,6 @@ namespace SkiaSharpControlV2.Renderer
             HorizontalScrollViewer = horizontalScrollViewer;
             VerticalScrollViewer = verticalScrollViewer;
         }
-
         public void SetColumns(IEnumerable<SKGridViewColumn> columns)
         {
             Columns = columns;
@@ -82,20 +75,38 @@ namespace SkiaSharpControlV2.Renderer
         {
             Group = group;
         }
-
-        public void SetFont(SKFont? font)
+        public void SetFontSize(float size)
         {
-            if (font != null)
-                SymbolFont = font;
-
+            FontSize = size;
+            UpdateFont();
         }
+
+        public void SetFontFamily(string fontFamily)
+        {
+            FontFamily = fontFamily;
+            UpdateFont();
+        }
+        public void SetFontStyle(string fontStyle)
+        {
+            FontStyle = fontStyle;
+            UpdateFont();
+        }
+        private void UpdateFont() 
+        {
+            if (Helper.IsFontInstalled(FontFamily))
+                SymbolFont = SkFontFactory.CreateSkFont(FontFamily, FontStyle, FontSize);
+            else
+                throw new ArgumentException($" \"{FontFamily}\" font not installed");
+        }
+
         public void SetGridLinesVisibility(bool showGridLines)
         {
             ShowGridLines = showGridLines;
         }
         public void SetGridLinesColor(string color)
         {
-            GridLineColor.Color = SKColor.Parse(color);
+            if (!string.IsNullOrEmpty(color))
+                GridLineColor.Color = SKColor.Parse(color);
         }
         public void SetGroupRowBackgroundColor(string? color)
         {
@@ -109,23 +120,24 @@ namespace SkiaSharpControlV2.Renderer
         }
         public void SetForeground(string color)
         {
-            FontColor.Color = SKColor.Parse(color);
+            if (!string.IsNullOrEmpty(color))
+                FontColor.Color = SKColor.Parse(color);
         }
         public void SetRowBackgroundColor(string color)
         {
-            RowBackgroundColor.Color = SKColor.Parse(color);
+            if (!string.IsNullOrEmpty(color))
+                RowBackgroundColor.Color = SKColor.Parse(color);
         }
-        public void SetAlternatingRowBackground(string color)
+        public void SetAlternatingRowBackground(string? color)
         {
             if (color == null)
                 AlternatingRowBackground = null;
             else
                 AlternatingRowBackground = new SKPaint { Color = SKColor.Parse(color), StrokeWidth = 1, IsAntialias = true };
         }
-
-
         public void Draw(SKCanvas canvas, float scrollOffsetX, float scrollOffsetY, float rowHeight, int totalRows)
         {
+
             int firstVisibleRow = Math.Max(0, (int)(scrollOffsetY / rowHeight));
 
             int firstVisibleCol = 0;
@@ -162,6 +174,7 @@ namespace SkiaSharpControlV2.Renderer
 
             float currentY = firstVisibleRow * rowHeight;
             List<GroupModel>? GroupItems = null;
+
             IEnumerator<object> items = Items!.Cast<object>().Skip(firstVisibleRow).Take(visibleRowCount).GetEnumerator();
             items?.MoveNext();
             if (Group != null)
@@ -171,6 +184,7 @@ namespace SkiaSharpControlV2.Renderer
 
             for (int row = firstVisibleRow; row < firstVisibleRow + visibleRowCount; row++)
             {
+
                 var item = items?.Current;
                 float currentX = 0;
                 float currentX1 = 0;
@@ -220,7 +234,7 @@ namespace SkiaSharpControlV2.Renderer
                                     double? aggreateValue = CalculateGroupAggregation(ValuesForTotal, reflectionHelper, groupHeader.BindingPath, groupHeader.Aggregation);
 
                                     var val = Helper.ApplyFormat(typeof(double), aggreateValue.ToString(), visibleColumns[colIndex].Format, visibleColumns[colIndex].ShowBracketOnNegative, visibleColumns[colIndex].FormatWithAcronym);
-                                    var celltemplate = GetSetterValues(groupHeader?.CellTemplate?.Setters);
+                                    var celltemplate = GetSetterValues(reflectionHelper, groupHeader?.CellTemplate?.Setters, null);
                                     SKPaint BackgroundColor = celltemplate.BackgroundColor ?? GroupRowBackgroundColor;
                                     SKPaint Foregroundcolor = celltemplate.Foregroundcolor ?? GroupFontColor;
                                     SKPaint BorderColor = celltemplate.BorderColor;
@@ -238,7 +252,7 @@ namespace SkiaSharpControlV2.Renderer
                             var value = reflectionHelper.ReadCurrentItemWithTypes(GroupItems[row].Item, visibleColumns[colIndex].BindingPath);
                             var val = Helper.ApplyFormat(value.Type, value.Value, visibleColumns[colIndex].Format, visibleColumns[colIndex].ShowBracketOnNegative, visibleColumns[colIndex].FormatWithAcronym);
 
-                            var defaultRowtemplate = GetSetterValues(CurrentContext?.RowTemplate?.Setters);
+                            var defaultRowtemplate = GetSetterValues(reflectionHelper, CurrentContext?.RowTemplate?.Setters, GroupItems[row].Item);
                             SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? rowcolor;
                             SKPaint Foregroundcolor = defaultRowtemplate.Foregroundcolor ?? FontColor;
                             SKPaint BorderColor = null;
@@ -248,7 +262,7 @@ namespace SkiaSharpControlV2.Renderer
                             Foregroundcolor = defaultrowtriggerTemplate.Foregroundcolor ?? Foregroundcolor;
                             BorderColor = null;
 
-                            var defaultcelltemplate = GetSetterValues(CurrentContext?.CellTemplate?.Setters);
+                            var defaultcelltemplate = GetSetterValues(reflectionHelper, CurrentContext?.CellTemplate?.Setters, GroupItems[row].Item);
                             BackgroundColor = defaultcelltemplate.BackgroundColor ?? BackgroundColor;
                             Foregroundcolor = defaultcelltemplate.Foregroundcolor ?? Foregroundcolor;
                             BorderColor = defaultcelltemplate.BorderColor ?? BorderColor;
@@ -258,7 +272,7 @@ namespace SkiaSharpControlV2.Renderer
                             Foregroundcolor = defaulttriggerTemplate.Foregroundcolor ?? Foregroundcolor;
                             BorderColor = defaulttriggerTemplate.BorderColor ?? BorderColor;
 
-                            var celltemplate = GetSetterValues(visibleColumns[colIndex]?.CellTemplate?.Setters);
+                            var celltemplate = GetSetterValues(reflectionHelper, visibleColumns[colIndex]?.CellTemplate?.Setters, GroupItems[row].Item);
                             BackgroundColor = celltemplate.BackgroundColor ?? BackgroundColor;
                             Foregroundcolor = celltemplate.Foregroundcolor ?? Foregroundcolor;
                             BorderColor = celltemplate.BorderColor ?? BorderColor;
@@ -278,7 +292,7 @@ namespace SkiaSharpControlV2.Renderer
                         var value = reflectionHelper.ReadCurrentItemWithTypes(item, CurrentColumns.BindingPath);
                         var val = Helper.ApplyFormat(value.Type, value.Value, CurrentColumns.Format, CurrentColumns.ShowBracketOnNegative, CurrentColumns.FormatWithAcronym);
 
-                        var defaultRowtemplate = GetSetterValues(CurrentContext?.RowTemplate?.Setters);
+                        var defaultRowtemplate = GetSetterValues(reflectionHelper, CurrentContext?.RowTemplate?.Setters, item);
                         SKPaint BackgroundColor = defaultRowtemplate.BackgroundColor ?? rowcolor;
                         SKPaint Foregroundcolor = defaultRowtemplate.Foregroundcolor ?? FontColor;
                         SKPaint BorderColor = null;
@@ -288,7 +302,7 @@ namespace SkiaSharpControlV2.Renderer
                         Foregroundcolor = defaultrowtriggerTemplate.Foregroundcolor ?? Foregroundcolor;
                         BorderColor = null;
 
-                        var defaultcelltemplate = GetSetterValues(CurrentContext?.CellTemplate?.Setters);
+                        var defaultcelltemplate = GetSetterValues(reflectionHelper, CurrentContext?.CellTemplate?.Setters, item);
                         BackgroundColor = defaultcelltemplate.BackgroundColor ?? BackgroundColor;
                         Foregroundcolor = defaultcelltemplate.Foregroundcolor ?? Foregroundcolor;
                         BorderColor = defaultcelltemplate.BorderColor ?? BorderColor;
@@ -298,7 +312,7 @@ namespace SkiaSharpControlV2.Renderer
                         Foregroundcolor = defaulttriggerTemplate.Foregroundcolor ?? Foregroundcolor;
                         BorderColor = defaulttriggerTemplate.BorderColor ?? BorderColor;
 
-                        var celltemplate = GetSetterValues(CurrentColumns?.CellTemplate?.Setters);
+                        var celltemplate = GetSetterValues(reflectionHelper, CurrentColumns?.CellTemplate?.Setters, item);
                         BackgroundColor = celltemplate.BackgroundColor ?? BackgroundColor;
                         Foregroundcolor = celltemplate.Foregroundcolor ?? Foregroundcolor;
                         BorderColor = celltemplate.BorderColor ?? BorderColor;
@@ -326,6 +340,8 @@ namespace SkiaSharpControlV2.Renderer
                 items?.MoveNext();
                 currentY += rowHeight;
             }
+
+
         }
         public void UpdateVisibleColumns()
         {
@@ -341,7 +357,7 @@ namespace SkiaSharpControlV2.Renderer
         }
         private void Draw(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontcolor, SKFont textFont, SKPaint backColor, SKPaint? borderColor, float width, float x, float y, CellContentAlignment cellContentAlignment, float rowHeight, bool isselectedrow)
         {
-           
+
             var rowBackColor = (isselectedrow && IsWindowActive) ? SelectedRowBackgroundHighlighting : backColor;
             var rowTextColor = (isselectedrow && IsWindowActive) ? SelectedRowTextColor : fontcolor;
 
@@ -371,9 +387,6 @@ namespace SkiaSharpControlV2.Renderer
             canvas.DrawLine(x + 1f, y + rowHeight - 2f, x + width - 2f, y + rowHeight - 2f, borderColor);//bottom
             canvas.DrawLine(x + 1f, y + 1f, x + width - 2f, y + 1f, borderColor); // top
         }
-
-
-
         private void DrawText(SKCanvas canvas, int columnsIndex, int rowIndex, string value, SKPaint fontColor, SKFont textFont, float width, float x, float y, CellContentAlignment cellContentAlignment)
         {
             if (width < 10 || string.IsNullOrEmpty(value))
@@ -420,8 +433,6 @@ namespace SkiaSharpControlV2.Renderer
 
             canvas.DrawText(finalText, textX, y + textFont.Size, textFont, fontColor);
         }
-
-
         private void DrawRect(SKCanvas canvas, int rowIndex, float x, float y, SKPaint backColor, float width, float rowHeight)
         {
             float left = ShowGridLines ? x : x;
@@ -447,7 +458,6 @@ namespace SkiaSharpControlV2.Renderer
 
             return false;
         }
-
 
         private double? CalculateGroupAggregation(
                     IEnumerable<GroupModel> groupItems,
@@ -481,11 +491,10 @@ namespace SkiaSharpControlV2.Renderer
             };
         }
 
-
         private static (SKPaint BackgroundColor, SKPaint Foregroundcolor, SKPaint BorderColor) GetTriggerTemplate(object item, ReflectionHelper reflection, IEnumerable<SKTrigger> triggers)
         {
             SKPaint backgroundColor = null;
-            SKPaint foregroundcolor = null; ;
+            SKPaint foregroundcolor = null; 
             SKPaint borderColor = null;
             if (triggers != null && triggers.Count() > 0)
             {
@@ -495,31 +504,41 @@ namespace SkiaSharpControlV2.Renderer
                     var res = trigger.Evaluate(item, reflection);
                     if (res)
                     {
-                        return GetSetterValues(trigger.Setters);
+                        return GetSetterValues(reflection, trigger.Setters, item);
                     }
                 }
             }
             return (backgroundColor, foregroundcolor, borderColor);
         }
-        private static (SKPaint BackgroundColor, SKPaint Foregroundcolor, SKPaint BorderColor) GetSetterValues(IEnumerable<SKSetter>? setters)
+        private static (SKPaint BackgroundColor, SKPaint Foregroundcolor, SKPaint BorderColor) GetSetterValues(ReflectionHelper reflection, IEnumerable<SKSetter>? setters, object Item)
         {
             SKPaint backgroundColor = null;
-            SKPaint foregroundcolor = null; ;
+            SKPaint foregroundcolor = null;
             SKPaint borderColor = null;
-            if (setters != null && setters.Count() > 0)
+            if (setters != null)
             {
                 foreach (var item1 in setters)
                 {
+                    var value = "";
+                    if (string.IsNullOrEmpty(item1.ValuePath) || Item == null)
+                        value = item1.Value?.ToString() ?? "";
+                    else
+                    {
+                        var (strVal, _) = reflection.ReadCurrentItemWithTypes(Item, item1.ValuePath);
+                        value = strVal ?? "";
+                    }
+
+
                     switch (item1.Property)
                     {
                         case SkStyleProperty.Background:
-                            backgroundColor = new SKPaint { Color = SKColor.Parse(item1.Value.ToString()), StrokeWidth = 1, IsAntialias = true };
+                            backgroundColor = new SKPaint { Color = SKColor.Parse(value), StrokeWidth = 1, IsAntialias = true };
                             break;
                         case SkStyleProperty.Foreground:
-                            foregroundcolor = new SKPaint { Color = SKColor.Parse(item1.Value.ToString()), StrokeWidth = 1, IsAntialias = true };
+                            foregroundcolor = new SKPaint { Color = SKColor.Parse(value), StrokeWidth = 1, IsAntialias = true };
                             break;
                         case SkStyleProperty.BorderColor:
-                            borderColor = new SKPaint { Color = SKColor.Parse(item1.Value.ToString()), StrokeWidth = 1, IsAntialias = true };
+                            borderColor = new SKPaint { Color = SKColor.Parse(value), StrokeWidth = 1, IsAntialias = true };
                             break;
                         default:
                             break;
@@ -561,10 +580,9 @@ namespace SkiaSharpControlV2.Renderer
             return sb.ToString();
         }
 
+        public void Dispose()
+        {
 
-
+        }
     }
-
-
-
 }

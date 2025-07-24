@@ -8,8 +8,8 @@
         xmlns:skia="clr-namespace:SkiaSharpControlV2;assembly=SkiaSharpControlV2"
         Title="MainWindow" Height="700" Width="1000"
         Icon="/logop1.ico"
-        UseLayoutRounding="True"
-        >
+        UseLayoutRounding="True">
+
     <Grid>
         <Grid.Resources>
             <local:BindingProxy x:Key="ProxyElement" Data="{Binding}" />
@@ -78,8 +78,11 @@
                                  CanUserResizeColumns="True"
                                  CanUserSortColumns="True"
                                  RetainSelectionOnLFocusLost="False"
+                                 SKFontSize="19"
+                                 SKFontFamily="Agency FB"
+                                 SKFontStyle="italic"
                                  Name="skiaGrid">
-                <!--<skia:SkiaGridViewV2.GroupSettings  >
+                <!-- <skia:SkiaGridViewV2.GroupSettings  >
                     <skia:SKGroupDefinition GroupBy="Name" Target="Name" RowBackground="#CECECE" ForegroundColor="#ffffff"  >
                         <skia:SKGroupDefinition.HeaderFields>
                             <skia:SKGroupField BindingPath="Price"  Aggregation="Sum" TargetColumns="Price" >

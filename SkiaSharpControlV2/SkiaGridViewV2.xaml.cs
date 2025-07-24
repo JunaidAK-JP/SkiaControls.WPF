@@ -30,7 +30,7 @@ namespace SkiaSharpControlV2
     /// </summary>
 
     //[ContentProperty(nameof(Columns))]
-    public partial class SkiaGridViewV2 : UserControl
+    public partial class SkiaGridViewV2 : UserControl, IDisposable
     {
         private SkiaRenderer SkiaRenderer;
         #region Properties
@@ -50,6 +50,7 @@ namespace SkiaSharpControlV2
         {
             InitializeComponent();
             DataListView.ItemsSource = new List<string> { "" };
+            Columns = new SkGridColumnCollection();
             //DispatcherTimer tm = new DispatcherTimer()
             //{
             //    Interval = TimeSpan.FromMilliseconds(250)
@@ -86,12 +87,14 @@ namespace SkiaSharpControlV2
                 }
                 else
                     UpdateTotalRows();
-
-                _collectionView.CollectionChanged += CollectionViewChanged;
+                if (_collectionView != null)
+                    _collectionView.CollectionChanged += CollectionViewChanged;
                 SkiaRenderer.UpdateVisibleColumns();
                 SkiaRenderer.SetGridLinesVisibility(ShowGridLines);
                 SkiaRenderer.SetScrollBars(HorizontalScrollViewer, VerticalScrollViewer);
-                SkiaRenderer.SetFont(Font);
+                SkiaRenderer.SetFontSize(SKFontSize);
+                SkiaRenderer.SetFontFamily(SKFontFamily);
+                SkiaRenderer.SetFontStyle(SKFontStyle);
                 SkiaRenderer.SetGridLinesColor(GridLinesColor);
                 SkiaRenderer.SetForeground(ForegroundColor);
                 SkiaRenderer.SetRowBackgroundColor(RowBackground);
@@ -106,13 +109,28 @@ namespace SkiaSharpControlV2
                     parentWindow.Activated += ParentWindow_Activated;
                     parentWindow.Deactivated += ParentWindow_Deactivated;
                 }
+                DataListView.AddHandler(
+                       DataGridColumnHeader.PreviewMouseDoubleClickEvent,
+                       new MouseButtonEventHandler((sender, e) =>
+                       {
+                           if (e.OriginalSource is FrameworkElement element &&
+                               element.TemplatedParent is System.Windows.Controls.Primitives.Thumb)
+                           {
+                               e.Handled = true; // Cancel default resizing
+                           }
+                       }),
+                       true);
             };
             Unloaded += (s, e) =>
             {
-                _collectionView.CollectionChanged -= CollectionViewChanged;
+                if (_collectionView != null)
+                    _collectionView.CollectionChanged -= CollectionViewChanged;
                 var parentWindow = Window.GetWindow(this);
-                parentWindow.Activated -= ParentWindow_Activated;
-                parentWindow.Deactivated -= ParentWindow_Deactivated;
+                if (parentWindow != null)
+                {
+                    parentWindow.Activated -= ParentWindow_Activated;
+                    parentWindow.Deactivated -= ParentWindow_Deactivated;
+                }
             };
             SizeChanged += (s, o) =>
             {
@@ -146,7 +164,7 @@ namespace SkiaSharpControlV2
         }
 
         public static readonly DependencyProperty ColumnsProperty =
-            DependencyProperty.Register(nameof(Columns), typeof(SkGridColumnCollection), typeof(SkiaGridViewV2), new PropertyMetadata(new SkGridColumnCollection()));
+            DependencyProperty.Register(nameof(Columns), typeof(SkGridColumnCollection), typeof(SkiaGridViewV2), new PropertyMetadata(null));
 
         #endregion Columns
 
@@ -417,7 +435,6 @@ namespace SkiaSharpControlV2
             set { SetValue(CanUserSortColumnsProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for HorizontalScrollBarVisible.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty CanUserSortColumnsProperty =
             DependencyProperty.Register(
                 nameof(CanUserSortColumns),
@@ -434,58 +451,151 @@ namespace SkiaSharpControlV2
         }
 
 
-
-
-        public SKFont? Font
+        public float SKFontSize
         {
-            get { return (SKFont?)GetValue(FontProperty); }
-            set { SetValue(FontProperty, value); }
+            get { return (float)GetValue(SKFontSizeProperty); }
+            set { SetValue(SKFontSizeProperty, value); }
         }
 
-        public static readonly DependencyProperty FontProperty =
+        public static readonly DependencyProperty SKFontSizeProperty =
             DependencyProperty.Register(
-                nameof(Font),
-                typeof(SKFont),
+                nameof(SKFontSize),
+                typeof(float),
                 typeof(SkiaGridViewV2),
-                new PropertyMetadata(null, FontChanged));
+                new PropertyMetadata(12f, SKFontSizeChanged));
 
-        private static void FontChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void SKFontSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is SkiaGridViewV2 skGridView)
             {
                 if (e.NewValue != null)
                 {
-                    skGridView.RowHeight = ((SKFont)e.NewValue).Size + 4;
-                    skGridView.DataListView.FontSize = skGridView!.Font!.Size;
-                    string skiaFontFamilyName = skGridView!.Font!.Typeface.FamilyName;
-
-                    var skFont = skGridView!.Font!;
-                    var skTypeface = skFont.Typeface;
-                    var skStyle = skTypeface.FontStyle;
-
-                    // Set FontFamily
-                    skGridView.DataListView.FontFamily = new System.Windows.Media.FontFamily(skTypeface.FamilyName);
-
-                    // Map SkiaSharp slant to WPF FontStyle
-                    System.Windows.FontStyle wpfFontStyle = FontStyles.Normal;
-                    if (skStyle.Slant == SKFontStyleSlant.Italic)
-                        wpfFontStyle = FontStyles.Italic;
-                    else if (skStyle.Slant == SKFontStyleSlant.Oblique)
-                        wpfFontStyle = FontStyles.Oblique;
-
-                    skGridView.DataListView.FontStyle = wpfFontStyle;
-
-                    // Map SkiaSharp weight to WPF FontWeight
-                    FontWeight wpfFontWeight = FontWeights.Normal;
-                    if (skStyle.Weight >= (int)SKFontStyleWeight.SemiBold)
-                        wpfFontWeight = FontWeights.Bold;
-
-                    skGridView.DataListView.FontWeight = wpfFontWeight;
-
-                    skGridView.SKGridColumnHeader.Height = new GridLength(skGridView.ColumnHeaderVisible ? (skGridView!.Font!.Size + 10) : 0);
+                    var size = (float)e.NewValue;
+                    skGridView.RowHeight = (size + 4);
+                    skGridView.DataListView.FontSize = size;
+                    skGridView.SkiaRenderer.SetFontSize(size);
+                    skGridView.SKGridColumnHeader.Height = new GridLength(skGridView.ColumnHeaderVisible ? (size + 10) : 0);
                 }
             }
         }
+        public string SKFontFamily
+        {
+            get { return (string)GetValue(SKFontFamilyProperty); }
+            set { SetValue(SKFontFamilyProperty, value); }
+        }
+
+        public static readonly DependencyProperty SKFontFamilyProperty =
+            DependencyProperty.Register(
+                nameof(SKFontFamily),
+                typeof(string),
+                typeof(SkiaGridViewV2),
+                new PropertyMetadata("Arial", SKFontFamilyChanged));
+
+        private static void SKFontFamilyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkiaGridViewV2 skGridView)
+            {
+                if (e.NewValue != null)
+                {
+                    var fontFamily = (string)e.NewValue;
+                    skGridView.SkiaRenderer.SetFontFamily(fontFamily);
+
+
+                    skGridView.DataListView.FontFamily = new FontFamily(fontFamily);
+                    //skGridView.DataListView.ColumnHeaderStyle = cellStyle;
+                   
+                }
+            }
+        }
+        public string SKFontStyle
+        {
+            get { return (string)GetValue(SKFontStyleProperty); }
+            set { SetValue(SKFontStyleProperty, value); }
+        }
+
+        public static readonly DependencyProperty SKFontStyleProperty =
+            DependencyProperty.Register(
+                nameof(SKFontStyle),
+                typeof(string),
+                typeof(SkiaGridViewV2),
+                new PropertyMetadata("Normal", SKFontStyleChanged));
+
+        private static void SKFontStyleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkiaGridViewV2 skGridView)
+            {
+                if (e.NewValue != null)
+                {
+                    var fontstyle = ((string)e.NewValue).ToLower();
+                    skGridView.SkiaRenderer.SetFontStyle(fontstyle);
+
+                    System.Windows.FontStyle wpfFontStyle = FontStyles.Normal;
+                    if (fontstyle == "normal")
+                        wpfFontStyle = FontStyles.Normal;
+                    else if (fontstyle == "italic" || fontstyle.Contains("italic"))
+                        wpfFontStyle = FontStyles.Italic;
+
+                    skGridView.DataListView.FontStyle = wpfFontStyle;
+
+                    FontWeight wpfFontWeight = FontWeights.Normal;
+                    if (fontstyle.Contains("bold"))
+                        wpfFontWeight = FontWeights.Bold;
+
+                    skGridView.DataListView.FontWeight = wpfFontWeight;
+                }
+            }
+        }
+
+        //public SKFont? Font
+        //{
+        //    get { return (SKFont?)GetValue(FontProperty); }
+        //    set { SetValue(FontProperty, value); }
+        //}
+
+        //public static readonly DependencyProperty FontProperty =
+        //    DependencyProperty.Register(
+        //        nameof(Font),
+        //        typeof(SKFont),
+        //        typeof(SkiaGridViewV2),
+        //        new PropertyMetadata(null, FontChanged));
+
+        //private static void FontChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        //{
+        //    if (d is SkiaGridViewV2 skGridView)
+        //    {
+        //        if (e.NewValue != null)
+        //        {
+        //            skGridView.RowHeight = ((SKFont)e.NewValue).Size + 4;
+        //            skGridView.DataListView.FontSize = skGridView!.Font!.Size;
+        //            string skiaFontFamilyName = skGridView!.Font!.Typeface.FamilyName;
+
+        //            var skFont = skGridView!.Font!;
+        //            var skTypeface = skFont.Typeface;
+        //            var skStyle = skTypeface.FontStyle;
+
+        //            // Set FontFamily
+        //            skGridView.DataListView.FontFamily = new System.Windows.Media.FontFamily(skTypeface.FamilyName);
+
+        //            // Map SkiaSharp slant to WPF FontStyle
+        //            System.Windows.FontStyle wpfFontStyle = FontStyles.Normal;
+        //            if (skStyle.Slant == SKFontStyleSlant.Italic)
+        //                wpfFontStyle = FontStyles.Italic;
+        //            else if (skStyle.Slant == SKFontStyleSlant.Oblique)
+        //                wpfFontStyle = FontStyles.Oblique;
+
+        //            skGridView.DataListView.FontStyle = wpfFontStyle;
+
+        //            // Map SkiaSharp weight to WPF FontWeight
+        //            FontWeight wpfFontWeight = FontWeights.Normal;
+        //            if (skStyle.Weight >= (int)SKFontStyleWeight.SemiBold)
+        //                wpfFontWeight = FontWeights.Bold;
+
+        //            skGridView.DataListView.FontWeight = wpfFontWeight;
+
+        //            skGridView.SKGridColumnHeader.Height = new GridLength(skGridView.ColumnHeaderVisible ? (skGridView!.Font!.Size + 10) : 0);
+        //        }
+        //    }
+        //}
 
         public bool ColumnHeaderVisible
         {
@@ -526,6 +636,41 @@ namespace SkiaSharpControlV2
             }
         }
 
+
+        public ContextMenu ContextMenu
+        {
+            get { return (ContextMenu)GetValue(ContextMenuProperty); }
+            set { SetValue(ContextMenuProperty, value); }
+        }
+
+        public static readonly DependencyProperty ContextMenuProperty =
+            DependencyProperty.Register(nameof(ContextMenu), typeof(ContextMenu), typeof(SkiaGridViewV2), new PropertyMetadata(default, OnContextMenuChanged));
+
+        private static void OnContextMenuChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkiaGridViewV2 skGridView)
+            {
+                skGridView.skiaContainer.ContextMenu = e.NewValue as ContextMenu;
+            }
+        }
+
+        public ContextMenu ItemsContextMenu
+        {
+            get { return (ContextMenu)GetValue(ItemsContextMenuProperty); }
+            set { SetValue(ItemsContextMenuProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for ItemsContextMenu.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ItemsContextMenuProperty =
+            DependencyProperty.Register(nameof(ItemsContextMenu), typeof(ContextMenu), typeof(SkiaGridViewV2), new PropertyMetadata(default, OnItemsContextMenuChanged));
+
+        private static void OnItemsContextMenuChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkiaGridViewV2 skGridView)
+            {
+                skGridView.SkiaCanvas.ContextMenu = e.NewValue as ContextMenu;
+            }
+        }
         public Action<double> HorizontalScrollBarPositionChanged
         {
             get { return (Action<double>)GetValue(HorizontalScrollBarPositionChangedProperty); }
@@ -545,6 +690,52 @@ namespace SkiaSharpControlV2
         // Using a DependencyProperty as the backing store for OnItemClick.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty VerticalScrollBarPositionChangedProperty =
             DependencyProperty.Register(nameof(VerticalScrollBarPositionChanged), typeof(Action<double>), typeof(SkiaGridViewV2), new PropertyMetadata(default));
+
+
+        public bool HorizontalScrollBarVisible
+        {
+            get { return (bool)GetValue(HorizontalScrollBarVisibleProperty); }
+            set { SetValue(HorizontalScrollBarVisibleProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for HorizontalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty HorizontalScrollBarVisibleProperty =
+            DependencyProperty.Register(
+                nameof(HorizontalScrollBarVisible),
+                typeof(bool),
+                typeof(SkiaGridViewV2),
+                new PropertyMetadata(true, OnHorizontalScrollBarVisibilityChanged));
+
+        private static void OnHorizontalScrollBarVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkiaGridViewV2 skGridView)
+            {
+                skGridView.HorizontalScrollViewer.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+
+        public bool VerticalScrollBarVisible
+        {
+            get { return (bool)GetValue(VerticalScrollBarVisibleProperty); }
+            set { SetValue(VerticalScrollBarVisibleProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for VerticalScrollBarVisible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty VerticalScrollBarVisibleProperty =
+            DependencyProperty.Register(
+                nameof(VerticalScrollBarVisible),
+                typeof(bool),
+                typeof(SkiaGridViewV2),
+                new PropertyMetadata(true, OnVerticalScrollBarVisibilityChanged));
+
+        private static void OnVerticalScrollBarVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SkiaGridViewV2 skGridView)
+            {
+                skGridView.VerticalScrollViewer.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
         #endregion SelectedItems
 
         #region ColorProperties
@@ -703,18 +894,36 @@ namespace SkiaSharpControlV2
             }
 
         }
+        private void MonitorColumnResizeRemove(DataGridColumn? column)
+        {
+            var descriptor = DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty, typeof(DataGridColumn));
+            descriptor?.RemoveValueChanged(column, OnColumnWidthChanged);
+        }
+        private void MonitorColumnResizeAdd(DataGridColumn? column)
+        {
+            var descriptor = DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty, typeof(DataGridColumn));
+            descriptor?.AddValueChanged(column, OnColumnWidthChanged);
+        }
+
         private void OnColumnWidthChanged(object sender, EventArgs e)
         {
             try
             {
+                if (IsBusy)
+                    return;
+                IsBusy = true;
+
                 if (sender is DataGridTextColumn column)
                 {
                     var colname = (column?.Header ?? "").ToString();
                     var col = Columns.FirstOrDefault(x => x.Header == colname || x.DisplayHeader == colname);
                     if (col != null)
                         col.Width = column.ActualWidth;
-                    UpdateScrollValues();
+                    //UpdateSkiaGrid();
+                    //UpdateScrollValues();
+                    //Refresh();
                 }
+                IsBusy = false;
             }
             catch (Exception)
             {
@@ -746,7 +955,7 @@ namespace SkiaSharpControlV2
             }
         }
 
-        private void SubscribeToGroupColumnEvents(SKGroupDefinition group)
+        private void SubscribeToGroupColumnEvents(SKGroupDefinition? group)
         {
             if (group != null)
             {
@@ -757,6 +966,8 @@ namespace SkiaSharpControlV2
         }
         private void Column_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
+            //if (e.PropertyName == nameof(SKGridViewColumn.Width))
+            //    return;
             if (sender is SKGridViewColumn column)
             {
                 DataGridColumn? col = DataListView.Columns.FirstOrDefault(x => x.Header?.ToString() == column?.Header?.ToString());
@@ -777,11 +988,13 @@ namespace SkiaSharpControlV2
                     if (e.PropertyName == nameof(SKGridViewColumn.GridViewColumnSort)) { }
                     if (e.PropertyName == nameof(SKGridViewColumn.Width))
                     {
-                        if (IsBusy) return;
+                        //if (IsBusy) return;
                         IsBusy = true;
+                        MonitorColumnResizeRemove(col);
                         col.Width = new DataGridLength(column.Width);
                         UpdateScrollValues();
                         UpdateSkiaGrid();
+                        MonitorColumnResizeAdd(col);
                         IsBusy = false;
                         Refresh();
                     }
@@ -870,7 +1083,7 @@ namespace SkiaSharpControlV2
             }
             else
             {
-                TotalRows = _collectionView.SourceCollection.Cast<object>().Count();
+                TotalRows = _collectionView?.SourceCollection.Cast<object>().Count() ?? 0;
             }
             UpdateSkiaGrid();
             UpdateScrollValues();
@@ -1015,7 +1228,7 @@ namespace SkiaSharpControlV2
 
         private void SkiaCanvas_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
-            if (IsBusy) return;
+            //if (IsBusy) return;
 
             SKCanvas canvas = e.Surface.Canvas;
             canvas.Clear();
@@ -1380,16 +1593,10 @@ namespace SkiaSharpControlV2
         }
         public void Refresh()
         {
-
             try
-            {
-                SkiaCanvas.InvalidateVisual();
-            }
+            { SkiaCanvas.InvalidateVisual(); }
             catch { }
-
-
         }
-
 
         public string ExportData(SKExportType exportType)
         {
@@ -1398,6 +1605,13 @@ namespace SkiaSharpControlV2
         public void ScrollToVerticalOffset(double offset)
         {
             VerticalScrollViewer.Value = offset;
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            SkiaRenderer?.Dispose();
+
         }
     }
 }
